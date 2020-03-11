@@ -1,0 +1,17 @@
+apiVersion: core.oam.dev/v1alpha1
+kind: ApplicationConfiguration
+metadata:
+  name: manual-scaler-app
+  annotations:
+    version: v1.0.0
+    description: "Manually scaled simple app"
+spec:
+  variables:
+  components:
+    - componentName: nginx-replicated
+      instanceName: web-front-end
+      parameterValues:
+      traits:
+        - name: manual-scaler
+          properties:
+            replicaCount: 5

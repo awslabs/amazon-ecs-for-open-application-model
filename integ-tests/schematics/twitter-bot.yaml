@@ -1,0 +1,143 @@
+apiVersion: core.oam.dev/v1alpha1
+kind: ApplicationConfiguration
+metadata:
+  name: twitter-bot
+  annotations:
+    version: v1.0.0
+    description: "Example Twitter bot app"
+spec:
+  components:
+    - componentName: frontend
+      instanceName: web-front-end
+      parameterValues:
+        - name: username
+          value: hello
+        - name: password
+          value: world
+        - name: backend-address
+          value: http://hello.world
+
+    - componentName: admin-backend
+      instanceName: backend-svc
+      parameterValues:
+        - name: twitter-consumer-key
+          value: key
+        - name: twitter-consumer-secret
+          value: secret
+        - name: twitter-access-token
+          value: token
+        - name: twitter-access-token-secret
+          value: token-secret
+---
+apiVersion: core.oam.dev/v1alpha1
+kind: ComponentSchematic
+metadata:
+  name: frontend
+  annotations:
+    version: v1.0.0
+    description: >
+      Sample component schematic that describes the administrative interface for our Twitter bot.
+spec:
+  workloadType: core.oam.dev/v1alpha1.Server
+  osType: linux
+  parameters:
+  - name: username
+    description: Basic auth username for accessing the administrative interface
+    type: string
+    required: true
+  - name: password
+    description: Basic auth password for accessing the administrative interface
+    type: string
+    required: true
+  - name: backend-address
+    description: Host name or IP of the backend
+    type: string
+    required: true
+  containers:
+  - name: my-twitter-bot-frontend
+    image: example/my-twitter-bot-frontend@sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b
+    resources:
+      cpu:
+        required: 2.0
+      memory:
+        required: 1G
+    ports:
+    - name: http
+      containerPort: 8080
+    env:
+    - name: USERNAME
+      fromParam: 'username'
+    - name: PASSWORD
+      fromParam: 'password'
+    - name: BACKEND_ADDRESS
+      fromParam: 'backend-address'
+    livenessProbe:
+      httpGet:
+        port: 8080
+        path: /healthz
+    readinessProbe:
+      httpGet:
+        port: 8080
+        path: /healthz
+---
+apiVersion: core.oam.dev/v1alpha1
+kind: ComponentSchematic
+metadata:
+  name: admin-backend
+  annotations:
+    version: v1.0.0
+    description: >
+      Sample component schematic that describes the backend for our Twitter bot.
+spec:
+  workloadType: core.oam.dev/v1alpha1.Server
+  osType: linux
+  parameters:
+  - name: twitter-consumer-key
+    description: Twitter API consumer key
+    type: string
+    required: true
+  - name: twitter-consumer-secret
+    description: Twitter API consumer secret
+    type: string
+    required: true
+  - name: twitter-access-token
+    description: Twitter API access token
+    type: string
+    required: true
+  - name: twitter-access-token-secret
+    description: Twitter API access token secret
+    type: string
+    required: true
+  containers:
+  - name: my-twitter-bot-backend
+    image: example/my-twitter-bot-backend@sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b
+    resources:
+      cpu:
+        required: 1.0
+      memory:
+        required: 100M
+      volumes:
+      - name: config
+        mountPath: /var/lib/my-twitter-bot/conf
+        accessMode: RW
+        sharingPolicy: Exclusive
+    ports:
+    - name: http
+      containerPort: 8080
+    env:
+    - name: TWITTER_CONSUMER_KEY
+      fromParam: 'twitter-consumer-key'
+    - name: TWITTER_CONSUMER_SECRET
+      fromParam: 'twitter-consumer-secret'
+    - name: TWITTER_ACCESS_TOKEN
+      fromParam: 'twitter-access-token'
+    - name: TWITTER_ACCESS_TOKEN_SECRET
+      fromParam: 'twitter-access-token-secret'
+    livenessProbe:
+      httpGet:
+        port: 8080
+        path: /healthz
+    readinessProbe:
+      httpGet:
+        port: 8080
+        path: /healthz

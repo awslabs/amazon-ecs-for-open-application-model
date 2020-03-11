@@ -1,0 +1,149 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Amazon ECS infrastructure for webserver-app web-front-end
+
+Resources:
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: oam-ecs-webserver-app-web-front-end
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    DependsOn: LogGroup
+    Properties:
+      Family: oam-ecs-webserver-app-web-front-end
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: 2.00 vcpu
+      Memory: 4096
+      ExecutionRoleArn: !Ref ExecutionRole
+      ContainerDefinitions:
+        - Name: web
+          Image: example/frontend-svc:latest
+          Environment:
+            - Name: MESSAGE
+              Value:  "[fromVariable(message)]"
+          PortMappings:
+            - ContainerPort: 80
+              Protocol:  tcp
+          RepositoryCredentials:
+            CredentialsParameter: "dockerhub-creds"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref LogGroup
+              awslogs-stream-prefix: oam-ecs
+
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: PrivateRegistryCreds
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'secretsmanager:GetSecretValue'
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:dockerhub-creds-??????'
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+
+  ContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: oam-ecs-webserver-app-web-front-end-ContainerSecurityGroup
+      VpcId:
+        Fn::ImportValue: oam-ecs-VpcId
+
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster:
+        Fn::ImportValue: oam-ecs-ClusterId
+      TaskDefinition: !Ref TaskDefinition
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          Subnets:
+            Fn::Split:
+              - ','
+              - Fn::ImportValue: oam-ecs-PrivateSubnets
+          SecurityGroups:
+            - !Ref ContainerSecurityGroup
+      LoadBalancers:
+        - ContainerName: web
+          ContainerPort: 80
+          TargetGroupArn: !Ref TargetGroupWeb80
+      HealthCheckGracePeriodSeconds: 0
+    DependsOn:
+      - LBListenerWeb80
+
+  SGLoadBalancerToContainers:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Ingress from anywhere on the internet through the public NLB
+      GroupId: !Ref ContainerSecurityGroup
+      IpProtocol: -1
+      CidrIp: 0.0.0.0/0
+
+  PublicLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: network
+      Scheme: internet-facing
+      Subnets:
+        Fn::Split:
+          - ','
+          - Fn::ImportValue: oam-ecs-PublicSubnets
+
+  LBListenerWeb80:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+      - PublicLoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroupWeb80
+          Type: 'forward'
+      LoadBalancerArn: !Ref 'PublicLoadBalancer'
+      Port: 80
+      Protocol:  TCP
+
+  TargetGroupWeb80:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Protocol:  TCP
+      TargetType: ip
+      Port: 80
+      VpcId:
+        Fn::ImportValue: oam-ecs-VpcId
+      TargetGroupAttributes:
+      - Key: deregistration_delay.timeout_seconds
+        Value: '30'
+
+Outputs:
+  CloudFormationStackConsole:
+    Description: The AWS console deep-link for the CloudFormation stack
+    Value: !Sub https://console.aws.amazon.com/cloudformation/home?region=${AWS::Region}#/stacks/stackinfo?stackId=${AWS::StackId}
+
+  ECSServiceConsole:
+    Description: The AWS console deep-link for the ECS service
+    Value: !Sub https://console.aws.amazon.com/ecs/home?region=${AWS::Region}#/clusters/oam-ecs/services/${Service.Name}/details
+
+  EndpointWebPort80:
+    Description: The endpoint for container Web on port 80
+    Value: !Sub '${PublicLoadBalancer.DNSName}:80'

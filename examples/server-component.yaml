@@ -1,0 +1,27 @@
+apiVersion: core.oam.dev/v1alpha1
+kind: ComponentSchematic
+metadata:
+  name: nginx-server-v1
+spec:
+  workloadType: core.oam.dev/v1alpha1.Server
+  osType: linux
+  containers:
+    - name: server
+      image: nginxdemos/hello
+      resources:
+        cpu:
+          required: 0.1
+        memory:
+          required: "128"
+      args:
+        - "nginx-debug"
+        - "-g"
+        - "daemon off;"
+      env:
+        - name: TEST
+          value: Hello
+        - name: PARAM
+          fromParam: WorldValue
+      ports:
+        - name: port
+          containerPort: 80

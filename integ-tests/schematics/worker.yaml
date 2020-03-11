@@ -1,0 +1,28 @@
+apiVersion: core.oam.dev/v1alpha1
+kind: ComponentSchematic
+metadata:
+  name: nginx-replicated
+  labels:
+    app: my-nginx-replicated-app
+  annotations:
+    version: "1.0.1"
+    description: A worker that runs nginx
+spec:
+  workloadType: core.oam.dev/v1alpha1.Worker
+  os: linux
+  containers:
+    - name: server
+      image: nginx:latest
+---
+apiVersion: core.oam.dev/v1alpha1
+kind: ApplicationConfiguration
+metadata:
+  name: simple-worker
+  annotations:
+    version: v1.0.0
+    description: "Simple worker example"
+spec:
+  variables:
+  components:
+    - componentName: nginx-replicated
+      instanceName: web-front-end

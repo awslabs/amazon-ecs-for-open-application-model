@@ -1,0 +1,192 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Amazon ECS infrastructure for webserver-app backend-svc
+
+Resources:
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: oam-ecs-webserver-app-backend-svc
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    DependsOn: LogGroup
+    Properties:
+      Family: oam-ecs-webserver-app-backend-svc
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: 2.00 vcpu
+      Memory: 4096
+      ExecutionRoleArn: !Ref ExecutionRole
+      ContainerDefinitions:
+        - Name: web
+          Image: example/backend-api:latest
+          PortMappings:
+            - ContainerPort: 4000
+              Protocol:  udp
+          RepositoryCredentials:
+            CredentialsParameter: "dockerhub-creds"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref LogGroup
+              awslogs-stream-prefix: oam-ecs
+        - Name: sidecar
+          Image: example/backend-sidecar:latest
+          PortMappings:
+            - ContainerPort: 4001
+              Protocol:  tcp
+          RepositoryCredentials:
+            CredentialsParameter: "other-dockerhub-creds"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref LogGroup
+              awslogs-stream-prefix: oam-ecs
+
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: PrivateRegistryCreds
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'secretsmanager:GetSecretValue'
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:dockerhub-creds-??????'
+                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:other-dockerhub-creds-??????'
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+
+  ContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: oam-ecs-webserver-app-backend-svc-ContainerSecurityGroup
+      VpcId:
+        Fn::ImportValue: oam-ecs-VpcId
+
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster:
+        Fn::ImportValue: oam-ecs-ClusterId
+      TaskDefinition: !Ref TaskDefinition
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          Subnets:
+            Fn::Split:
+              - ','
+              - Fn::ImportValue: oam-ecs-PrivateSubnets
+          SecurityGroups:
+            - !Ref ContainerSecurityGroup
+      LoadBalancers:
+        - ContainerName: web
+          ContainerPort: 4000
+          TargetGroupArn: !Ref TargetGroupWeb4000
+        - ContainerName: sidecar
+          ContainerPort: 4001
+          TargetGroupArn: !Ref TargetGroupSidecar4001
+      HealthCheckGracePeriodSeconds: 0
+    DependsOn:
+      - LBListenerWeb4000
+      - LBListenerSidecar4001
+
+  SGLoadBalancerToContainers:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Ingress from anywhere on the internet through the public NLB
+      GroupId: !Ref ContainerSecurityGroup
+      IpProtocol: -1
+      CidrIp: 0.0.0.0/0
+
+  PublicLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: network
+      Scheme: internet-facing
+      Subnets:
+        Fn::Split:
+          - ','
+          - Fn::ImportValue: oam-ecs-PublicSubnets
+
+  LBListenerWeb4000:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+      - PublicLoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroupWeb4000
+          Type: 'forward'
+      LoadBalancerArn: !Ref 'PublicLoadBalancer'
+      Port: 4000
+      Protocol:  UDP
+
+  TargetGroupWeb4000:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Protocol:  UDP
+      TargetType: ip
+      Port: 4000
+      VpcId:
+        Fn::ImportValue: oam-ecs-VpcId
+      TargetGroupAttributes:
+      - Key: deregistration_delay.timeout_seconds
+        Value: '30'
+
+  LBListenerSidecar4001:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+      - PublicLoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroupSidecar4001
+          Type: 'forward'
+      LoadBalancerArn: !Ref 'PublicLoadBalancer'
+      Port: 4001
+      Protocol:  TCP
+
+  TargetGroupSidecar4001:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Protocol:  TCP
+      TargetType: ip
+      Port: 4001
+      VpcId:
+        Fn::ImportValue: oam-ecs-VpcId
+      TargetGroupAttributes:
+      - Key: deregistration_delay.timeout_seconds
+        Value: '30'
+
+Outputs:
+  CloudFormationStackConsole:
+    Description: The AWS console deep-link for the CloudFormation stack
+    Value: !Sub https://console.aws.amazon.com/cloudformation/home?region=${AWS::Region}#/stacks/stackinfo?stackId=${AWS::StackId}
+
+  ECSServiceConsole:
+    Description: The AWS console deep-link for the ECS service
+    Value: !Sub https://console.aws.amazon.com/ecs/home?region=${AWS::Region}#/clusters/oam-ecs/services/${Service.Name}/details
+
+  EndpointWebPort4000:
+    Description: The endpoint for container Web on port 4000
+    Value: !Sub '${PublicLoadBalancer.DNSName}:4000'
+
+  EndpointSidecarPort4001:
+    Description: The endpoint for container Sidecar on port 4001
+    Value: !Sub '${PublicLoadBalancer.DNSName}:4001'

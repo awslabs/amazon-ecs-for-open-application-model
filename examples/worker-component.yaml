@@ -1,0 +1,23 @@
+apiVersion: core.oam.dev/v1alpha1
+kind: ComponentSchematic
+metadata:
+  name: nginx-worker-v1
+spec:
+  workloadType: core.oam.dev/v1alpha1.Worker
+  osType: linux
+  containers:
+    - name: worker
+      image: nginxdemos/hello:plain-text
+      resources:
+        cpu:
+          required: 0.1
+        memory:
+          required: "128"
+      livenessProbe:
+        timeoutSeconds: 2
+        exec:
+          command:
+            - "wget"
+            - "-qO"
+            - "-"
+            - "http://localhost"

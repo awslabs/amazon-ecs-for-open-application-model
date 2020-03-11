@@ -1,0 +1,10 @@
+apiVersion: core.oam.dev/v1alpha1
+kind: HelloWorld
+metadata:
+  name: worker-with-bad-kind
+spec:
+  workloadType: core.oam.dev/v1alpha1.Worker
+  osType: linux
+  containers:
+    - name: worker
+      image: nginx:latest

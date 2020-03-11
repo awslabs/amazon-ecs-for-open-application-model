@@ -1,0 +1,17 @@
+apiVersion: core.oam.dev/v1alpha1
+kind: ApplicationConfiguration
+metadata:
+  name: example-app
+spec:
+  components:
+    - componentName: nginx-worker-v1
+      instanceName: worker-nginx
+      traits:
+        - name: manual-scaler
+          properties:
+            replicaCount: 2
+    - componentName: nginx-server-v1
+      instanceName: server-nginx
+      parameterValues:
+        - name: WorldValue
+          value: Everyone

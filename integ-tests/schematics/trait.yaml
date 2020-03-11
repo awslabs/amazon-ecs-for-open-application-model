@@ -1,0 +1,27 @@
+apiVersion: core.oam.dev/v1alpha1
+kind: Trait
+metadata:
+  name: manual-scaler
+  annotations:
+    version: v1.0.0
+    description: "Allow operators to manually scale a workloads that allow multiple replicas."
+spec:
+  appliesTo:
+    - core.oam.dev/v1alpha1.Server
+    - core.oam.dev/v1alpha1.Worker
+    - core.oam.dev/v1alpha1.Task
+  properties: |
+    {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "required": [
+        "replicaCount"
+      ],
+      "properties": {
+        "replicaCount": {
+          "type": "integer",
+          "description": "the target number of replicas to scale a component to.",
+          "minimum": 0
+        }
+      }
+    }

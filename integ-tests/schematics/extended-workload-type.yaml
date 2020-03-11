@@ -1,0 +1,10 @@
+apiVersion: core.oam.dev/v1alpha1
+kind: ComponentSchematic
+metadata:
+  name: worker-with-extended-workload-type
+spec:
+  workloadType: ecs.amazonaws.com/v1.ECSService
+  osType: linux
+  containers:
+    - name: worker
+      image: nginx:latest

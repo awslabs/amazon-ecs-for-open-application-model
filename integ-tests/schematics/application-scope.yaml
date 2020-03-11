@@ -1,0 +1,26 @@
+apiVersion: core.oam.dev/v1alpha1
+kind: ApplicationScope
+metadata:
+  name: network
+  annotations:
+    version: v1.0.0
+    description: "network boundary that a group components reside in"
+spec:
+  type: core.oam.dev/v1.NetworkScope
+  allowComponentOverlap: false
+  parameters:
+    - name: network-id
+      description: The id of the network, e.g. vpc-id, VNet name.
+      type: string
+      required: Y
+    - name: subnet-ids
+      description: >
+        A comma separated list of IDs of the subnets within the network. For example, "vsw-123" or ""vsw-123,vsw-456".
+        There could be more than one subnet because there is a limit in the number of IPs in a subnet.
+        If IPs are taken up, operators need to add another subnet into this network.
+      type: string
+      required: Y
+    - name: internet-gateway-type
+      description: The type of the gateway, options are 'public', 'nat'. Empty string means no gateway.
+      type: string
+      required: N

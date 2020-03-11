@@ -1,0 +1,187 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Amazon ECS infrastructure for {{.ApplicationConfiguration.Name}} {{.ComponentConfiguration.InstanceName}}
+
+Resources:
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: {{.Environment.Name}}-{{.ApplicationConfiguration.Name}}-{{.ComponentConfiguration.InstanceName}}
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    DependsOn: LogGroup
+    Properties:
+      Family: {{.Environment.Name}}-{{.ApplicationConfiguration.Name}}-{{.ComponentConfiguration.InstanceName}}
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: {{TaskCPU $.Component.Spec.Containers}}
+      Memory: {{TaskMemory $.Component.Spec.Containers}}
+      ExecutionRoleArn: !Ref ExecutionRole
+      ContainerDefinitions: {{range $container := $.Component.Spec.Containers}}
+        - Name: {{$container.Name}}
+          Image: {{$container.Image}} {{if $container.Resources.Gpu}} {{if not $container.Resources.Gpu.Required.IsZero}}
+          ResourceRequirements:
+            - Type: GPU
+              Value: {{$container.Resources.Gpu.Required}}{{end}}{{end}} {{if $container.Resources.Volumes}}
+          MountPoints: {{range $volume := $container.Resources.Volumes}}
+            - ContainerPath: {{$volume.MountPath}}
+              ReadOnly: {{if eq $volume.AccessMode "RO"}} true {{else}} false {{end}}
+              SourceVolume: {{$volume.Name}} {{end}} {{end}} {{if $container.Cmd}}
+          EntryPoint: {{range $cmd := $container.Cmd}}
+            - "{{$cmd}}" {{end}} {{end}} {{if $container.Args}}
+          Command: {{range $arg := $container.Args}}
+            - "{{$arg}}" {{end}}  {{end}} {{if $container.Env}}
+          Environment: {{range $env := $container.Env}}
+            - Name: {{$env.Name}}
+              Value: {{if $env.FromParam}} "{{ResolveParameterValue $env.FromParam $.ComponentConfiguration}}" {{else}} "{{$env.Value}}" {{end}} {{end}} {{end}} {{if eq $.Component.Spec.WorkloadType "core.oam.dev/v1alpha1.Server"}} {{if $container.Ports}}
+          PortMappings: {{range $port := $container.Ports}}
+            - ContainerPort: {{$port.ContainerPort}}
+              Protocol: {{if $port.Protocol}} {{$port.Protocol | toString | lower}} {{else}} tcp {{end}} {{end}} {{end}} {{end}} {{if $container.ImagePullSecret}}
+          RepositoryCredentials:
+            CredentialsParameter: "{{$container.ImagePullSecret}}" {{end}} {{if $container.LivenessProbe}} {{if $container.LivenessProbe.Exec}}
+          HealthCheck:
+            Command: {{range $cmd := $container.LivenessProbe.Exec.Command}}
+              - "{{$cmd}}" {{end}}
+            Interval: {{if $container.LivenessProbe.PeriodSeconds}} {{$container.LivenessProbe.PeriodSeconds}} {{else}} 10 {{end}}
+            Retries: {{if $container.LivenessProbe.FailureThreshold}} {{$container.LivenessProbe.FailureThreshold}} {{else}} 3 {{end}}
+            StartPeriod: {{if $container.LivenessProbe.InitialDelaySeconds}} {{$container.LivenessProbe.InitialDelaySeconds}} {{else}} 0 {{end}}
+            Timeout: {{if $container.LivenessProbe.TimeoutSeconds}} {{$container.LivenessProbe.TimeoutSeconds}} {{else}} 1 {{end}} {{end}} {{end}}
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref LogGroup
+              awslogs-stream-prefix: oam-ecs {{end}} {{if RequiresVolumes $.Component.Spec.Containers}}
+      Volumes: {{range $container := $.Component.Spec.Containers}} {{range $volume := $container.Resources.Volumes}}
+        - Name: {{$volume.Name}} {{end}}{{end}}{{end}}
+
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+      {{if RequiresPrivateRegistryAuth $.Component.Spec.Containers}}
+      Policies:
+        - PolicyName: PrivateRegistryCreds
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'secretsmanager:GetSecretValue'
+                Resource: {{range $container := $.Component.Spec.Containers}} {{if $container.ImagePullSecret}}
+                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:{{$container.ImagePullSecret}}-??????'{{end}} {{end}} {{end}}
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+
+  ContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: {{.Environment.Name}}-{{.ApplicationConfiguration.Name}}-{{.ComponentConfiguration.InstanceName}}-ContainerSecurityGroup
+      VpcId:
+        Fn::ImportValue: {{.Environment.Name}}-VpcId
+
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster:
+        Fn::ImportValue: {{.Environment.Name}}-ClusterId
+      TaskDefinition: !Ref TaskDefinition
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+      DesiredCount: {{ResolveTraitValue "manual-scaler" "replicaCount" 1 .ComponentConfiguration}}
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          Subnets:
+            Fn::Split:
+              - ','
+              - Fn::ImportValue: {{.Environment.Name}}-PrivateSubnets
+          SecurityGroups:
+            - !Ref ContainerSecurityGroup {{if eq $.Component.Spec.WorkloadType "core.oam.dev/v1alpha1.Server"}}
+      LoadBalancers: {{range $container := $.Component.Spec.Containers}} {{range $port := $container.Ports}}
+        - ContainerName: {{$container.Name}}
+          ContainerPort: {{$port.ContainerPort}}
+          TargetGroupArn: !Ref TargetGroup{{camelcase $container.Name}}{{$port.ContainerPort}} {{end}} {{end}}
+      HealthCheckGracePeriodSeconds: {{HealthCheckGracePeriod $.Component.Spec.Containers}}
+    DependsOn: {{range $container := $.Component.Spec.Containers}} {{range $port := $container.Ports}}
+      - LBListener{{camelcase $container.Name}}{{$port.ContainerPort}}
+    {{end}} {{end}} {{end}}
+
+{{if eq $.Component.Spec.WorkloadType "core.oam.dev/v1alpha1.Server"}}
+  SGLoadBalancerToContainers:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Ingress from anywhere on the internet through the public NLB
+      GroupId: !Ref ContainerSecurityGroup
+      IpProtocol: -1
+      CidrIp: 0.0.0.0/0
+
+  PublicLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: network
+      Scheme: internet-facing
+      Subnets:
+        Fn::Split:
+          - ','
+          - Fn::ImportValue: {{.Environment.Name}}-PublicSubnets
+{{range $container := $.Component.Spec.Containers}} {{range $port := $container.Ports}}
+  LBListener{{camelcase $container.Name}}{{$port.ContainerPort}}:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+      - PublicLoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroup{{camelcase $container.Name}}{{$port.ContainerPort}}
+          Type: 'forward'
+      LoadBalancerArn: !Ref 'PublicLoadBalancer'
+      Port: {{$port.ContainerPort}}
+      Protocol: {{if $port.Protocol}} {{$port.Protocol | toString | upper}} {{else}} TCP {{end}}
+
+  TargetGroup{{camelcase $container.Name}}{{$port.ContainerPort}}:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Protocol: {{if $port.Protocol}} {{$port.Protocol | toString | upper}} {{else}} TCP {{end}}
+      TargetType: ip
+      Port: {{$port.ContainerPort}}
+      VpcId:
+        Fn::ImportValue: {{$.Environment.Name}}-VpcId
+      TargetGroupAttributes:
+      - Key: deregistration_delay.timeout_seconds
+        Value: '30'
+      {{if $container.LivenessProbe}} {{if $container.LivenessProbe.HttpGet}}
+      HealthCheckProtocol: HTTP
+      HealthCheckPath: {{$container.LivenessProbe.HttpGet.Path}}
+      HealthCheckPort: {{$container.LivenessProbe.HttpGet.Port}}
+      {{else if $container.LivenessProbe.TcpSocket}}
+      HealthCheckProtocol: TCP
+      HealthCheckPort: {{$container.LivenessProbe.TcpSocket.Port}}
+      {{end}}
+      HealthCheckIntervalSeconds: {{if $container.LivenessProbe.PeriodSeconds}} {{$container.LivenessProbe.PeriodSeconds}} {{else}} 10 {{end}}
+      HealthCheckTimeoutSeconds: {{if $container.LivenessProbe.TimeoutSeconds}} {{$container.LivenessProbe.TimeoutSeconds}} {{else}} 1 {{end}}
+      HealthyThresholdCount: {{if $container.LivenessProbe.SuccessThreshold}} {{$container.LivenessProbe.SuccessThreshold}} {{else}} 1 {{end}}
+      UnhealthyThresholdCount: {{if $container.LivenessProbe.FailureThreshold}} {{$container.LivenessProbe.FailureThreshold}} {{else}} 3 {{end}}
+      {{end}}
+{{end}} {{end}} {{end}}
+
+Outputs:
+  CloudFormationStackConsole:
+    Description: The AWS console deep-link for the CloudFormation stack
+    Value: !Sub https://console.aws.amazon.com/cloudformation/home?region=${AWS::Region}#/stacks/stackinfo?stackId=${AWS::StackId}
+
+  ECSServiceConsole:
+    Description: The AWS console deep-link for the ECS service
+    Value: !Sub https://console.aws.amazon.com/ecs/home?region=${AWS::Region}#/clusters/oam-ecs/services/${Service.Name}/details
+{{if eq $.Component.Spec.WorkloadType "core.oam.dev/v1alpha1.Server"}} {{range $container := $.Component.Spec.Containers}} {{range $port := $container.Ports}}
+  Endpoint{{camelcase $container.Name}}Port{{$port.ContainerPort}}:
+    Description: The endpoint for container {{camelcase $container.Name}} on port {{$port.ContainerPort}}
+    Value: !Sub '${PublicLoadBalancer.DNSName}:{{$port.ContainerPort}}'
+{{end}} {{end}} {{end}}

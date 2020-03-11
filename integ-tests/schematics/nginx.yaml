@@ -1,0 +1,24 @@
+apiVersion: core.oam.dev/v1alpha1
+kind: ComponentSchematic
+metadata:
+  name: nginx-replicated
+  labels:
+    app: my-nginx-replicated-app
+  annotations:
+    version: "1.0.1"
+    description: A server that runs nginx
+spec:
+  workloadType: core.oam.dev/v1alpha1.Server
+  os: linux
+  containers:
+    - name: server
+      image: nginx:latest
+      resources:
+        cpu:
+          required: 4
+        memory:
+          required: 10G
+      ports:
+        - name: http
+          containerPort: 9001
+          protocol: TCP

@@ -1,0 +1,85 @@
+apiVersion: core.oam.dev/v1alpha1
+kind: ApplicationConfiguration
+metadata:
+  name: webserver-app
+  annotations:
+    version: v1.0.0
+    description: "Example webserver app"
+spec:
+  variables:
+    - name: message
+      value: "Well hello there"
+  components:
+    - componentName: frontend
+      instanceName: web-front-end
+      parameterValues:
+        - name: message
+          value: "[fromVariable(message)]"
+
+    - componentName: backend
+      instanceName: backend-svc
+---
+apiVersion: core.oam.dev/v1alpha1
+kind: ComponentSchematic
+metadata:
+  name: frontend
+  annotations:
+    version: v1.0.0
+    description: "A simple webserver"
+spec:
+  workloadType: core.oam.dev/v1alpha1.Server
+  parameters:
+    - name: message
+      description: The message to display in the web app.
+      type: string
+      value: "Hello from my app, too"
+  containers:
+    - name: web
+      env:
+        - name: MESSAGE
+          fromParam: message
+      image: example/frontend-svc:latest
+      imagePullSecret: dockerhub-creds
+      resources:
+        cpu:
+          required: 1.5
+        memory:
+          required: 128M
+      ports:
+        - name: port
+          containerPort: 80
+---
+apiVersion: core.oam.dev/v1alpha1
+kind: ComponentSchematic
+metadata:
+  name: backend
+  annotations:
+    version: v1.0.0
+    description: "A backend webserver"
+spec:
+  workloadType: core.oam.dev/v1alpha1.Server
+  containers:
+    - name: web
+      image: example/backend-api:latest
+      imagePullSecret: dockerhub-creds
+      resources:
+        cpu:
+          required: 1.25
+        memory:
+          required: 768M
+      ports:
+        - name: port
+          containerPort: 4000
+          protocol: UDP
+    - name: sidecar
+      image: example/backend-sidecar:latest
+      imagePullSecret: other-dockerhub-creds
+      resources:
+        cpu:
+          required: 0.5
+        memory:
+          required: 128M
+      ports:
+        - name: port
+          containerPort: 4001
+          protocol: TCP

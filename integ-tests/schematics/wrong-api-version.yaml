@@ -1,0 +1,10 @@
+apiVersion: core.oam.dev/hello
+kind: ComponentSchematic
+metadata:
+  name: worker-with-bad-api-version
+spec:
+  workloadType: core.oam.dev/v1alpha1.Worker
+  osType: linux
+  containers:
+    - name: worker
+      image: nginx:latest
