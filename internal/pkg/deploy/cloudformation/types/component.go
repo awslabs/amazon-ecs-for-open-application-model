@@ -1,3 +1,5 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 package types
 
 import "github.com/oam-dev/oam-go-sdk/apis/core.oam.dev/v1alpha1"
