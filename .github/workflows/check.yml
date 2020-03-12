@@ -1,0 +1,25 @@
+on:
+  [pull_request, push]
+
+name: Check
+
+jobs:
+  check:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Build
+      run: make
+
+    - name: Run tests
+      run: make test
+
+    - name: Lint integ test and example templates
+      run: |
+        pip install cfn-lint
+        cfn-lint integ-tests/schematics/*.expected.yaml
+        ./bin/local/oam-ecs apply --dry-run -f examples/example-app.yaml -f examples/worker-component.yaml -f examples/server-component.yaml
+        cfn-lint oam-ecs-dry-run-results/*
