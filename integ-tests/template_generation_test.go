@@ -203,6 +203,24 @@ var _ = Describe("generate dry-run CloudFormation templates", func() {
 			Expect(actualTemplate).Should(MatchCloudFormationTemplate(expectedTemplate))
 		})
 
+		It("complex example with server and worker", func() {
+			applyOpts.OamFiles = []string{
+				"../integ-tests/schematics/complex.yaml",
+			}
+			err := applyOpts.Execute()
+			Expect(err).Should(BeNil())
+
+			actualTemplate, _ := filepath.Abs("oam-ecs-dry-run-results/oam-ecs-complex-example-web-front-end-template.yaml")
+			expectedTemplate, _ := filepath.Abs("../integ-tests/schematics/complex.frontend.expected.yaml")
+			Expect(actualTemplate).Should(BeAnExistingFile())
+			Expect(actualTemplate).Should(MatchCloudFormationTemplate(expectedTemplate))
+
+			actualTemplate, _ = filepath.Abs("oam-ecs-dry-run-results/oam-ecs-complex-example-backend-template.yaml")
+			expectedTemplate, _ = filepath.Abs("../integ-tests/schematics/complex.backend.expected.yaml")
+			Expect(actualTemplate).Should(BeAnExistingFile())
+			Expect(actualTemplate).Should(MatchCloudFormationTemplate(expectedTemplate))
+		})
+
 		It("web server", func() {
 			applyOpts.OamFiles = []string{
 				"../integ-tests/schematics/webserver.yaml",

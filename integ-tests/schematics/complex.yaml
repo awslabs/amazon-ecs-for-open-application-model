@@ -1,0 +1,130 @@
+apiVersion: core.oam.dev/v1alpha1
+kind: ComponentSchematic
+metadata:
+  name: nginx-replicated
+  labels:
+    app: my-nginx-replicated-app
+  annotations:
+    version: "1.0.1"
+    description: A worker that runs nginx
+spec:
+  workloadType: core.oam.dev/v1alpha1.Worker
+  osType: linux
+  arch: arm64
+  containers:
+    - name: server
+      image: nginx:latest
+      cmd:
+        - nginx
+      args:
+        - "--debug"
+      config:
+        - path: "/etc/access/default_user.txt"
+          value: "admin"
+        - path: "/var/run/db-data"
+          fromParam: "sourceData"
+      resources:
+        cpu:
+          required: 4
+        memory:
+          required: 10G
+        gpu:
+          required: 1.0
+        volumes:
+          - name: "configuration"
+            mountPath: /etc/config
+            accessMode: RO
+            sharingPolicy: Shared
+            disk:
+              required: "2G"
+              ephemeral: n
+      livenessProbe:
+        exec:
+          command:
+            - "wget"
+            - "-qO"
+            - "-"
+            - "http://localhost"
+        initialDelaySeconds: 5
+        periodSeconds: 12
+        timeoutSeconds: 3
+        successThreshold: 2
+        failureThreshold: 4
+---
+apiVersion: core.oam.dev/v1alpha1
+kind: ComponentSchematic
+metadata:
+  name: nginx-replicated-server
+  labels:
+    app: my-nginx-replicated-app-server
+  annotations:
+    version: "1.0.1"
+    description: A worker that runs nginx
+spec:
+  workloadType: core.oam.dev/v1alpha1.Server
+  osType: linux
+  arch: arm64
+  containers:
+    - name: server
+      image: nginx:latest
+      cmd:
+        - nginx
+      args:
+        - "--debug"
+      config:
+        - path: "/etc/access/default_user.txt"
+          value: "admin"
+        - path: "/var/run/db-data"
+          fromParam: "sourceData"
+      resources:
+        cpu:
+          required: 2
+        memory:
+          required: 14G
+        gpu:
+          required: 2.0
+        volumes:
+          - name: "configuration"
+            mountPath: /etc/config
+            accessMode: RO
+            sharingPolicy: Shared
+            disk:
+              required: "2G"
+              ephemeral: n
+      ports:
+        - name: http
+          containerPort: 8080
+          protocol: tcp
+      livenessProbe:
+        httpGet:
+          port: 8081
+          path: /ok
+        initialDelaySeconds: 5
+        periodSeconds: 12
+        timeoutSeconds: 3
+        successThreshold: 2
+        failureThreshold: 4
+      readinessProbe:
+        httpGet:
+          port: 8084
+          path: /ok-ready
+        initialDelaySeconds: 1
+        periodSeconds: 2
+        timeoutSeconds: 4
+        successThreshold: 3
+        failureThreshold: 5
+---
+apiVersion: core.oam.dev/v1alpha1
+kind: ApplicationConfiguration
+metadata:
+  name: complex-example
+  annotations:
+    version: v1.0.0
+    description: "Complex worker and server example"
+spec:
+  variables:
+  components:
+    - componentName: nginx-replicated-server
+      instanceName: web-front-end
+    - componentName: nginx-replicated
+      instanceName: backend

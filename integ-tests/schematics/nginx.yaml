@@ -9,7 +9,7 @@ metadata:
     description: A server that runs nginx
 spec:
   workloadType: core.oam.dev/v1alpha1.Server
-  os: linux
+  osType: linux
   containers:
     - name: server
       image: nginx:latest

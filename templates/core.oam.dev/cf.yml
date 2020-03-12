@@ -22,7 +22,7 @@ Resources:
           Image: {{$container.Image}} {{if $container.Resources.Gpu}} {{if not $container.Resources.Gpu.Required.IsZero}}
           ResourceRequirements:
             - Type: GPU
-              Value: {{$container.Resources.Gpu.Required}}{{end}}{{end}} {{if $container.Resources.Volumes}}
+              Value: '{{$container.Resources.Gpu.Required.AsDec}}'{{end}}{{end}} {{if $container.Resources.Volumes}}
           MountPoints: {{range $volume := $container.Resources.Volumes}}
             - ContainerPath: {{$volume.MountPath}}
               ReadOnly: {{if eq $volume.AccessMode "RO"}} true {{else}} false {{end}}
