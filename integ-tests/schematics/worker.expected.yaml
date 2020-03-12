@@ -9,24 +9,23 @@ Resources:
 
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
-    DependsOn: LogGroup
     Properties:
       Family: oam-ecs-simple-worker-web-front-end
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
       Cpu: 0.25 vcpu
-      Memory: 512
-      ExecutionRoleArn: !Ref ExecutionRole
-      ContainerDefinitions:
+      Memory: '512'
+      ExecutionRoleArn: !GetAtt ExecutionRole.Arn
+      ContainerDefinitions: 
         - Name: server
-          Image: nginx:latest
+          Image: nginx:latest         
           LogConfiguration:
             LogDriver: awslogs
             Options:
               awslogs-region: !Ref AWS::Region
               awslogs-group: !Ref LogGroup
-              awslogs-stream-prefix: oam-ecs
+              awslogs-stream-prefix: oam-ecs  
 
   ExecutionRole:
     Type: AWS::IAM::Role
@@ -37,6 +36,7 @@ Resources:
             Principal:
               Service: ecs-tasks.amazonaws.com
             Action: 'sts:AssumeRole'
+      
       ManagedPolicyArns:
         - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
 
@@ -66,7 +66,9 @@ Resources:
               - ','
               - Fn::ImportValue: oam-ecs-PrivateSubnets
           SecurityGroups:
-            - !Ref ContainerSecurityGroup
+            - !Ref ContainerSecurityGroup 
+
+
 
 Outputs:
   CloudFormationStackConsole:
@@ -76,3 +78,4 @@ Outputs:
   ECSServiceConsole:
     Description: The AWS console deep-link for the ECS service
     Value: !Sub https://console.aws.amazon.com/ecs/home?region=${AWS::Region}#/clusters/oam-ecs/services/${Service.Name}/details
+

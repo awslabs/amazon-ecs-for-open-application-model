@@ -9,15 +9,14 @@ Resources:
 
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
-    DependsOn: LogGroup
     Properties:
       Family: {{.Environment.Name}}-{{.ApplicationConfiguration.Name}}-{{.ComponentConfiguration.InstanceName}}
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
       Cpu: {{TaskCPU $.Component.Spec.Containers}}
-      Memory: {{TaskMemory $.Component.Spec.Containers}}
-      ExecutionRoleArn: !Ref ExecutionRole
+      Memory: '{{TaskMemory $.Component.Spec.Containers}}'
+      ExecutionRoleArn: !GetAtt ExecutionRole.Arn
       ContainerDefinitions: {{range $container := $.Component.Spec.Containers}}
         - Name: {{$container.Name}}
           Image: {{$container.Image}} {{if $container.Resources.Gpu}} {{if not $container.Resources.Gpu.Required.IsZero}}
@@ -46,7 +45,7 @@ Resources:
             Interval: {{if $container.LivenessProbe.PeriodSeconds}} {{$container.LivenessProbe.PeriodSeconds}} {{else}} 10 {{end}}
             Retries: {{if $container.LivenessProbe.FailureThreshold}} {{$container.LivenessProbe.FailureThreshold}} {{else}} 3 {{end}}
             StartPeriod: {{if $container.LivenessProbe.InitialDelaySeconds}} {{$container.LivenessProbe.InitialDelaySeconds}} {{else}} 0 {{end}}
-            Timeout: {{if $container.LivenessProbe.TimeoutSeconds}} {{$container.LivenessProbe.TimeoutSeconds}} {{else}} 1 {{end}} {{end}} {{end}}
+            Timeout: {{if $container.LivenessProbe.TimeoutSeconds}} {{$container.LivenessProbe.TimeoutSeconds}} {{else}} 2 {{end}} {{end}} {{end}}
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -121,7 +120,7 @@ Resources:
     Properties:
       Description: Ingress from anywhere on the internet through the public NLB
       GroupId: !Ref ContainerSecurityGroup
-      IpProtocol: -1
+      IpProtocol: '-1'
       CidrIp: 0.0.0.0/0
 
   PublicLoadBalancer:
@@ -136,8 +135,6 @@ Resources:
 {{range $container := $.Component.Spec.Containers}} {{range $port := $container.Ports}}
   LBListener{{camelcase $container.Name}}{{$port.ContainerPort}}:
     Type: AWS::ElasticLoadBalancingV2::Listener
-    DependsOn:
-      - PublicLoadBalancer
     Properties:
       DefaultActions:
         - TargetGroupArn: !Ref TargetGroup{{camelcase $container.Name}}{{$port.ContainerPort}}
@@ -160,14 +157,15 @@ Resources:
       {{if $container.LivenessProbe}} {{if $container.LivenessProbe.HttpGet}}
       HealthCheckProtocol: HTTP
       HealthCheckPath: {{$container.LivenessProbe.HttpGet.Path}}
-      HealthCheckPort: {{$container.LivenessProbe.HttpGet.Port}}
+      HealthCheckPort: '{{$container.LivenessProbe.HttpGet.Port}}'
+      HealthCheckTimeoutSeconds: {{if $container.LivenessProbe.TimeoutSeconds}} {{$container.LivenessProbe.TimeoutSeconds}} {{else}} 6 {{end}}
       {{else if $container.LivenessProbe.TcpSocket}}
       HealthCheckProtocol: TCP
-      HealthCheckPort: {{$container.LivenessProbe.TcpSocket.Port}}
+      HealthCheckPort: '{{$container.LivenessProbe.TcpSocket.Port}}'
+      HealthCheckTimeoutSeconds: {{if $container.LivenessProbe.TimeoutSeconds}} {{$container.LivenessProbe.TimeoutSeconds}} {{else}} 10 {{end}}
       {{end}}
       HealthCheckIntervalSeconds: {{if $container.LivenessProbe.PeriodSeconds}} {{$container.LivenessProbe.PeriodSeconds}} {{else}} 10 {{end}}
-      HealthCheckTimeoutSeconds: {{if $container.LivenessProbe.TimeoutSeconds}} {{$container.LivenessProbe.TimeoutSeconds}} {{else}} 1 {{end}}
-      HealthyThresholdCount: {{if $container.LivenessProbe.SuccessThreshold}} {{$container.LivenessProbe.SuccessThreshold}} {{else}} 1 {{end}}
+      HealthyThresholdCount: {{if $container.LivenessProbe.SuccessThreshold}} {{$container.LivenessProbe.SuccessThreshold}} {{else}} 2 {{end}}
       UnhealthyThresholdCount: {{if $container.LivenessProbe.FailureThreshold}} {{$container.LivenessProbe.FailureThreshold}} {{else}} 3 {{end}}
       {{end}}
 {{end}} {{end}} {{end}}

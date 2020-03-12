@@ -9,42 +9,41 @@ Resources:
 
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
-    DependsOn: LogGroup
     Properties:
       Family: oam-ecs-twitter-bot-backend-svc
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
       Cpu: 1.00 vcpu
-      Memory: 2048
-      ExecutionRoleArn: !Ref ExecutionRole
-      ContainerDefinitions:
+      Memory: '2048'
+      ExecutionRoleArn: !GetAtt ExecutionRole.Arn
+      ContainerDefinitions: 
         - Name: my-twitter-bot-backend
-          Image: example/my-twitter-bot-backend@sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b
-          MountPoints:
+          Image: example/my-twitter-bot-backend@sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b   
+          MountPoints: 
             - ContainerPath: /var/lib/my-twitter-bot/conf
-              ReadOnly:  false
-              SourceVolume: config
-          Environment:
+              ReadOnly:  false 
+              SourceVolume: config     
+          Environment: 
             - Name: TWITTER_CONSUMER_KEY
-              Value:  "key"
+              Value:  "key"  
             - Name: TWITTER_CONSUMER_SECRET
-              Value:  "secret"
+              Value:  "secret"  
             - Name: TWITTER_ACCESS_TOKEN
-              Value:  "token"
+              Value:  "token"  
             - Name: TWITTER_ACCESS_TOKEN_SECRET
-              Value:  "token-secret"
-          PortMappings:
+              Value:  "token-secret"     
+          PortMappings: 
             - ContainerPort: 8080
-              Protocol:  tcp
+              Protocol:  tcp        
           LogConfiguration:
             LogDriver: awslogs
             Options:
               awslogs-region: !Ref AWS::Region
               awslogs-group: !Ref LogGroup
-              awslogs-stream-prefix: oam-ecs
-      Volumes:
-        - Name: config
+              awslogs-stream-prefix: oam-ecs  
+      Volumes:  
+        - Name: config 
 
   ExecutionRole:
     Type: AWS::IAM::Role
@@ -55,6 +54,7 @@ Resources:
             Principal:
               Service: ecs-tasks.amazonaws.com
             Action: 'sts:AssumeRole'
+      
       ManagedPolicyArns:
         - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
 
@@ -84,21 +84,23 @@ Resources:
               - ','
               - Fn::ImportValue: oam-ecs-PrivateSubnets
           SecurityGroups:
-            - !Ref ContainerSecurityGroup
-      LoadBalancers:
+            - !Ref ContainerSecurityGroup 
+      LoadBalancers:  
         - ContainerName: my-twitter-bot-backend
           ContainerPort: 8080
-          TargetGroupArn: !Ref TargetGroupMyTwitterBotBackend8080
+          TargetGroupArn: !Ref TargetGroupMyTwitterBotBackend8080  
       HealthCheckGracePeriodSeconds: 0
-    DependsOn:
+    DependsOn:  
       - LBListenerMyTwitterBotBackend8080
+      
+
 
   SGLoadBalancerToContainers:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       Description: Ingress from anywhere on the internet through the public NLB
       GroupId: !Ref ContainerSecurityGroup
-      IpProtocol: -1
+      IpProtocol: '-1'
       CidrIp: 0.0.0.0/0
 
   PublicLoadBalancer:
@@ -110,23 +112,21 @@ Resources:
         Fn::Split:
           - ','
           - Fn::ImportValue: oam-ecs-PublicSubnets
-
+ 
   LBListenerMyTwitterBotBackend8080:
     Type: AWS::ElasticLoadBalancingV2::Listener
-    DependsOn:
-      - PublicLoadBalancer
     Properties:
       DefaultActions:
         - TargetGroupArn: !Ref TargetGroupMyTwitterBotBackend8080
           Type: 'forward'
       LoadBalancerArn: !Ref 'PublicLoadBalancer'
       Port: 8080
-      Protocol:  TCP
+      Protocol:  TCP 
 
   TargetGroupMyTwitterBotBackend8080:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      Protocol:  TCP
+      Protocol:  TCP 
       TargetType: ip
       Port: 8080
       VpcId:
@@ -134,13 +134,17 @@ Resources:
       TargetGroupAttributes:
       - Key: deregistration_delay.timeout_seconds
         Value: '30'
+       
       HealthCheckProtocol: HTTP
       HealthCheckPath: /healthz
-      HealthCheckPort: 8080
-      HealthCheckIntervalSeconds:  10
-      HealthCheckTimeoutSeconds:  1
-      HealthyThresholdCount:  1
-      UnhealthyThresholdCount:  3
+      HealthCheckPort: '8080'
+      HealthCheckTimeoutSeconds:  6 
+      
+      HealthCheckIntervalSeconds:  10 
+      HealthyThresholdCount:  2 
+      UnhealthyThresholdCount:  3 
+      
+  
 
 Outputs:
   CloudFormationStackConsole:
@@ -150,7 +154,8 @@ Outputs:
   ECSServiceConsole:
     Description: The AWS console deep-link for the ECS service
     Value: !Sub https://console.aws.amazon.com/ecs/home?region=${AWS::Region}#/clusters/oam-ecs/services/${Service.Name}/details
-
+  
   EndpointMyTwitterBotBackendPort8080:
     Description: The endpoint for container MyTwitterBotBackend on port 8080
     Value: !Sub '${PublicLoadBalancer.DNSName}:8080'
+  

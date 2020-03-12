@@ -9,32 +9,31 @@ Resources:
 
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
-    DependsOn: LogGroup
     Properties:
       Family: oam-ecs-webserver-app-web-front-end
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
       Cpu: 2.00 vcpu
-      Memory: 4096
-      ExecutionRoleArn: !Ref ExecutionRole
-      ContainerDefinitions:
+      Memory: '4096'
+      ExecutionRoleArn: !GetAtt ExecutionRole.Arn
+      ContainerDefinitions: 
         - Name: web
-          Image: example/frontend-svc:latest
-          Environment:
+          Image: example/frontend-svc:latest      
+          Environment: 
             - Name: MESSAGE
-              Value:  "[fromVariable(message)]"
-          PortMappings:
+              Value:  "[fromVariable(message)]"     
+          PortMappings: 
             - ContainerPort: 80
-              Protocol:  tcp
+              Protocol:  tcp     
           RepositoryCredentials:
-            CredentialsParameter: "dockerhub-creds"
+            CredentialsParameter: "dockerhub-creds"  
           LogConfiguration:
             LogDriver: awslogs
             Options:
               awslogs-region: !Ref AWS::Region
               awslogs-group: !Ref LogGroup
-              awslogs-stream-prefix: oam-ecs
+              awslogs-stream-prefix: oam-ecs  
 
   ExecutionRole:
     Type: AWS::IAM::Role
@@ -45,6 +44,7 @@ Resources:
             Principal:
               Service: ecs-tasks.amazonaws.com
             Action: 'sts:AssumeRole'
+      
       Policies:
         - PolicyName: PrivateRegistryCreds
           PolicyDocument:
@@ -53,8 +53,8 @@ Resources:
               - Effect: 'Allow'
                 Action:
                   - 'secretsmanager:GetSecretValue'
-                Resource:
-                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:dockerhub-creds-??????'
+                Resource:  
+                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:dockerhub-creds-??????'  
       ManagedPolicyArns:
         - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
 
@@ -84,21 +84,23 @@ Resources:
               - ','
               - Fn::ImportValue: oam-ecs-PrivateSubnets
           SecurityGroups:
-            - !Ref ContainerSecurityGroup
-      LoadBalancers:
+            - !Ref ContainerSecurityGroup 
+      LoadBalancers:  
         - ContainerName: web
           ContainerPort: 80
-          TargetGroupArn: !Ref TargetGroupWeb80
+          TargetGroupArn: !Ref TargetGroupWeb80  
       HealthCheckGracePeriodSeconds: 0
-    DependsOn:
+    DependsOn:  
       - LBListenerWeb80
+      
+
 
   SGLoadBalancerToContainers:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       Description: Ingress from anywhere on the internet through the public NLB
       GroupId: !Ref ContainerSecurityGroup
-      IpProtocol: -1
+      IpProtocol: '-1'
       CidrIp: 0.0.0.0/0
 
   PublicLoadBalancer:
@@ -110,23 +112,21 @@ Resources:
         Fn::Split:
           - ','
           - Fn::ImportValue: oam-ecs-PublicSubnets
-
+ 
   LBListenerWeb80:
     Type: AWS::ElasticLoadBalancingV2::Listener
-    DependsOn:
-      - PublicLoadBalancer
     Properties:
       DefaultActions:
         - TargetGroupArn: !Ref TargetGroupWeb80
           Type: 'forward'
       LoadBalancerArn: !Ref 'PublicLoadBalancer'
       Port: 80
-      Protocol:  TCP
+      Protocol:  TCP 
 
   TargetGroupWeb80:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      Protocol:  TCP
+      Protocol:  TCP 
       TargetType: ip
       Port: 80
       VpcId:
@@ -134,6 +134,8 @@ Resources:
       TargetGroupAttributes:
       - Key: deregistration_delay.timeout_seconds
         Value: '30'
+      
+  
 
 Outputs:
   CloudFormationStackConsole:
@@ -143,7 +145,8 @@ Outputs:
   ECSServiceConsole:
     Description: The AWS console deep-link for the ECS service
     Value: !Sub https://console.aws.amazon.com/ecs/home?region=${AWS::Region}#/clusters/oam-ecs/services/${Service.Name}/details
-
+  
   EndpointWebPort80:
     Description: The endpoint for container Web on port 80
     Value: !Sub '${PublicLoadBalancer.DNSName}:80'
+  
