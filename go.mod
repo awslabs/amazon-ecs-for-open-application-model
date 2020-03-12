@@ -12,7 +12,7 @@ require (
 	github.com/fatih/color v1.7.0
 	github.com/gobuffalo/packd v1.0.0
 	github.com/gobuffalo/packr/v2 v2.8.0
-	github.com/golang/mock v1.3.1
+	github.com/golang/mock v1.4.1
 	github.com/google/uuid v1.1.1
 	github.com/huandu/xstrings v1.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.4 // indirect
