@@ -1,6 +1,6 @@
 # Amazon ECS for Open Application Model (oam-ecs)
 
-This is a proof-of-concept CLI that partially implements the [Open Application Model](https://oam.dev/) (OAM) specification.
+This is a proof-of-concept CLI that partially implements the [Open Application Model](https://oam.dev/) (OAM) specification, version v1alpha1.
 
 The oam-ecs CLI provisions two of the core OAM workload types as Amazon ECS services running on AWS Fargate using AWS CloudFormation.  A workload of type `core.oam.dev/v1alpha1.Worker` will deploy a CloudFormation stack containing an ECS service running in private VPC subnets with no accessible endpoint.  A workload of type `core.oam.dev/v1alpha1.Server` will deploy a CloudFormation stack containing an ECS service running in private VPC subnets, behind a publicly-accessible network load balancer.
 

@@ -25,7 +25,7 @@ func main() {
 func buildRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "oam-ecs",
-		Short: "Provision core Open Application Model (OAM) workload types as Amazon ECS services and tasks",
+		Short: "Provision core Open Application Model (OAM) v1alpha1 workload types as Amazon ECS services",
 		Example: `
   Display the help menu for the apply command
   $ oam-ecs apply --help`,
