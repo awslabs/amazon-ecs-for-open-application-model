@@ -79,9 +79,9 @@ Legend:
 
 | Support | Attribute | Notes |
 |---------|-----------|-------|
-| :heavy_check_mark: | `cpu` | Will sum the CPU requirements of all containers in the workload, and round up to the best-fit [Fargate task size](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html) |
-| :heavy_check_mark: | `memory` | Will sum the memory requirements of all containers in the workload, and round up to the best-fit [Fargate task size](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html) |
-| :large_blue_diamond: | `gpu` | GPU requirements will be generated into the CloudFormation template, but the deployment will fail as Fargate does not support GPUs. |
+| :heavy_check_mark: | `cpu` | Translates to [AWS::ECS::TaskDefinition Cpu](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html#cfn-ecs-taskdefinition-cpu)<br>Will sum the CPU requirements of all containers in the workload, and round up to the best-fit [Fargate task size](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html) |
+| :heavy_check_mark: | `memory` | Translates to [AWS::ECS::TaskDefinition Memory](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html#cfn-ecs-taskdefinition-memory)<br>Will sum the memory requirements of all containers in the workload, and round up to the best-fit [Fargate task size](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html) |
+| :large_blue_diamond: | `gpu` | Translates to [AWS::ECS::TaskDefinition ResourceRequirements](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html#cfn-ecs-taskdefinition-resourcerequirements)<br>GPU requirements will be generated into the CloudFormation template, but the deployment will fail as Fargate does not support GPUs. |
 | :large_blue_diamond: | `volumes` | Some volume requirements will be generated into the CloudFormation template, but the deployment will fail as Fargate does not support volumes. See [details below](#component-schematic-volume) for the supported volume requirements. |
 | :x: | `extended` | |
 
@@ -91,9 +91,9 @@ Legend:
 
 | Support | Attribute | Notes |
 |---------|-----------|-------|
-| :heavy_check_mark: | `name` |  |
-| :heavy_check_mark: | `mountPath` |  |
-| :heavy_check_mark: | `accessMode` |  |
+| :heavy_check_mark: | `name` | Translates to [AWS::ECS::TaskDefinition Volumes Name](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-volumes.html#cfn-ecs-taskdefinition-volumes-name) and [AWS::ECS::TaskDefinition ContainerDefinition MountPoints Name](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-containerdefinitions-mountpoints.html#cfn-ecs-taskdefinition-containerdefinition-mountpoints-sourcevolume) |
+| :heavy_check_mark: | `mountPath` | Translates to [AWS::ECS::TaskDefinition ContainerDefinition MountPoints ContainerPath](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-containerdefinitions-mountpoints.html#cfn-ecs-taskdefinition-containerdefinition-mountpoints-containerpath) |
+| :heavy_check_mark: | `accessMode` | Translates to [AWS::ECS::TaskDefinition ContainerDefinition MountPoints ReadOnly](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-containerdefinitions-mountpoints.html#cfn-ecs-taskdefinition-containerdefinition-mountpoints-readonly) |
 | :x: | `sharingPolicy` | |
 | :x: | `disk` | |
 
@@ -103,14 +103,14 @@ Legend:
 
 | Support | Attribute | Notes |
 |---------|-----------|-------|
-| :heavy_check_mark: | `exec` |  |
+| :heavy_check_mark: | `exec` | Translates to [AWS::ECS::TaskDefinition ContainerDefinition HealthCheck Command](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-healthcheck.html#cfn-ecs-taskdefinition-healthcheck-command) |
 | :large_blue_diamond: | `httpGet` | Only supported for workload type `core.oam.dev/v1alpha1.Server`. `httpHeaders` attribute is not supported. |
 | :heavy_check_mark: | `tcpSocket` | Only supported for workload type `core.oam.dev/v1alpha1.Server` |
-| :heavy_check_mark: | `initialDelaySeconds` | |
-| :heavy_check_mark: | `periodSeconds` | |
-| :heavy_check_mark: | `timeoutSeconds` | |
-| :large_blue_diamond: | `successThreshold` | Not supported for `exec` health probe. |
-| :heavy_check_mark: | `failureThreshold` | |
+| :heavy_check_mark: | `initialDelaySeconds` | With `exec`, translates to [AWS::ECS::TaskDefinition ContainerDefinition HealthCheck StartPeriod](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-healthcheck.html#cfn-ecs-taskdefinition-healthcheck-startperiod).<br>With `httpGet` or `tcpSocket`, translates to [AWS::ECS::Service HealthCheckGracePeriodSeconds](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-service.html#cfn-ecs-service-healthcheckgraceperiodseconds) |
+| :heavy_check_mark: | `periodSeconds` | With `exec`, translates to [AWS::ECS::TaskDefinition ContainerDefinition HealthCheck Interval](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-healthcheck.html#cfn-ecs-taskdefinition-healthcheck-interval).<br>With `httpGet` or `tcpSocket`, translates to [AWS::ElasticLoadBalancingV2::TargetGroup HealthCheckIntervalSeconds](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticloadbalancingv2-targetgroup.html#cfn-elasticloadbalancingv2-targetgroup-healthcheckintervalseconds) |
+| :heavy_check_mark: | `timeoutSeconds` | With `exec`, translates to [AWS::ECS::TaskDefinition ContainerDefinition HealthCheck Timeout](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-healthcheck.html#cfn-ecs-taskdefinition-healthcheck-timeout). Defaults to 2, instead of the OAM spec default of 1.<br>With `httpGet` or `tcpSocket`, translates to [AWS::ElasticLoadBalancingV2::TargetGroup HealthCheckTimeoutSeconds](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticloadbalancingv2-targetgroup.html#cfn-elasticloadbalancingv2-targetgroup-healthchecktimeoutseconds). For `httpGet`, defaults to 6. For `tcpSocket`, defaults to 10. |
+| :large_blue_diamond: | `successThreshold` | Not supported for `exec` health probe. With `httpGet` or `tcpSocket`, translates to [AWS::ElasticLoadBalancingV2::TargetGroup HealthyThresholdCount](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticloadbalancingv2-targetgroup.html#cfn-elasticloadbalancingv2-targetgroup-healthythresholdcount). Defaults to 2, instead of the OAM spec default of 1. |
+| :heavy_check_mark: | `failureThreshold` | With `exec`, translates to [AWS::ECS::TaskDefinition ContainerDefinition HealthCheck Retries](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-healthcheck.html#cfn-ecs-taskdefinition-healthcheck-retries).<br>With `httpGet` or `tcpSocket`, translates to [AWS::ElasticLoadBalancingV2::TargetGroup UnhealthyThresholdCount](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticloadbalancingv2-targetgroup.html#cfn-elasticloadbalancingv2-targetgroup-unhealthythresholdcount) |
 
 ## Application Configuration Spec
 
@@ -129,19 +129,10 @@ Legend:
 | Support | Attribute | Notes |
 |---------|-----------|-------|
 | :heavy_check_mark: | `componentName` |  |
-| :heavy_check_mark: | `instanceName` |  |
+| :heavy_check_mark: | `instanceName` | CloudFormation stack name will be `oam-ecs-{application configuration name}-{component instance name}` |
 | :heavy_check_mark: | `parameterValues` |  |
-| :heavy_check_mark: | `traits` |  |
+| :heavy_check_mark: | `traits` | See [details below](#traits) |
 | :x: | `applicationScopes` |  |
-
-### Application Configuration Trait
-
-[(spec link)](https://github.com/oam-dev/spec/blob/4af9e65769759c408193445baf99eadd93f3426a/6.application_configuration.md#trait)
-
-| Support | Attribute | Notes |
-|---------|-----------|-------|
-| :heavy_check_mark: | `name` |  |
-| :heavy_check_mark: | `properties` |  |
 
 ## Workload Types
 
@@ -149,7 +140,7 @@ Legend:
 
 | Support | Attribute | Notes |
 |---------|-----------|-------|
-| :heavy_check_mark: | `core.oam.dev/v1alpha1.Server` | Translates to an ECS service running on Fargate, behind an NLB |
+| :heavy_check_mark: | `core.oam.dev/v1alpha1.Server` | Translates to an ECS service running on Fargate, behind a Network Load Balancer |
 | :x: | `core.oam.dev/v1alpha1.SingletonServer` |  |
 | :heavy_check_mark: | `core.oam.dev/v1alpha1.Worker` | Translates to an ECS service running on Fargate, with no accessible endpoint |
 | :x: | `core.oam.dev/v1alpha1.SingletonWorker` |  |
@@ -173,5 +164,5 @@ Legend:
 
 | Support | Attribute | Notes |
 |---------|-----------|-------|
-| :heavy_check_mark: | `manual-scaler` |  |
+| :heavy_check_mark: | `manual-scaler` | Translates to [AWS::ECS::Service DesiredCount](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-service.html#cfn-ecs-service-desiredcount) |
 | :x: | Extended trait types |  |
