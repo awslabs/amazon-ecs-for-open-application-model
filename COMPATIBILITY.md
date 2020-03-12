@@ -26,7 +26,7 @@ Legend:
 
 | Support | Attribute | Notes |
 |---------|-----------|-------|
-| :heavy_check_mark: | `name` | |
+| :heavy_check_mark: | `name` | CloudFormation stack name will be `oam-ecs-{application configuration name}-{component instance name}` |
 | :x: | `labels` | Ignored |
 | :x: | `annotations` | Ignored |
 
@@ -61,17 +61,17 @@ Legend:
 
 | Support | Attribute | Notes |
 |---------|-----------|-------|
-| :heavy_check_mark: | `name` |  |
-| :heavy_check_mark: | `image` |  |
+| :heavy_check_mark: | `name` | Translates to [AWS::ECS::TaskDefinition ContainerDefinition Name](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-containerdefinitions.html#cfn-ecs-taskdefinition-containerdefinition-name) |
+| :heavy_check_mark: | `image` | Translates to [AWS::ECS::TaskDefinition ContainerDefinition Image](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-containerdefinitions.html#cfn-ecs-taskdefinition-containerdefinition-image) |
 | :large_blue_diamond: | `resources` | See [details below](#component-schematic-resources) |
-| :heavy_check_mark: | `cmd` | |
-| :heavy_check_mark: | `args` | |
-| :heavy_check_mark: | `env` |  |
-| :x: | `config` |  |
-| :heavy_check_mark: | `ports` |  |
+| :heavy_check_mark: | `cmd` | Translates to [AWS::ECS::TaskDefinition ContainerDefinition EntryPoint](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-containerdefinitions.html#cfn-ecs-taskdefinition-containerdefinition-entrypoint) |
+| :heavy_check_mark: | `args` | Translates to [AWS::ECS::TaskDefinition ContainerDefinition Command](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-containerdefinitions.html#cfn-ecs-taskdefinition-containerdefinition-command) |
+| :heavy_check_mark: | `env` | Translates to [AWS::ECS::TaskDefinition ContainerDefinition Environment](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-containerdefinitions.html#cfn-ecs-taskdefinition-containerdefinition-environment) |
+| :x: | `config` | ECS does not natively support config files |
+| :heavy_check_mark: | `ports` | Translates to [AWS::ECS::TaskDefinition ContainerDefinition PortMappings](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-containerdefinitions.html#cfn-ecs-taskdefinition-containerdefinition-portmappings), and [AWS::ElasticLoadBalancingV2::TargetGroup](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticloadbalancingv2-targetgroup.html) and [AWS::ElasticLoadBalancingV2::Listener](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticloadbalancingv2-listener.html) Port and Protocol |
 | :large_blue_diamond: | `livenessProbe` |  See [details below](#component-schematic-healthprobe) |
-| :x: | `readinessProbe` | |
-| :heavy_check_mark: | `imagePullSecret` | Must be the name (not ARN) of a Secrets Manager secret in the same region, encrypted with the default KMS key. See the [ECS documentation](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/private-auth.html) for instructions. |
+| :x: | `readinessProbe` | ECS does not distinguish between liveness and readiness |
+| :heavy_check_mark: | `imagePullSecret` | Must be the name (not ARN) of a Secrets Manager secret in the same region, encrypted with the default KMS key. See the [ECS documentation](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/private-auth.html) for instructions. Translates to [AWS::ECS::TaskDefinition RepositoryCredentials](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-containerdefinitions.html#cfn-ecs-taskdefinition-containerdefinition-repositorycredentials) |
 
 ### Component Schematic Resources
 
@@ -149,9 +149,9 @@ Legend:
 
 | Support | Attribute | Notes |
 |---------|-----------|-------|
-| :heavy_check_mark: | `core.oam.dev/v1alpha1.Server` |  |
+| :heavy_check_mark: | `core.oam.dev/v1alpha1.Server` | Translates to an ECS service running on Fargate, behind an NLB |
 | :x: | `core.oam.dev/v1alpha1.SingletonServer` |  |
-| :heavy_check_mark: | `core.oam.dev/v1alpha1.Worker` |  |
+| :heavy_check_mark: | `core.oam.dev/v1alpha1.Worker` | Translates to an ECS service running on Fargate, with no accessible endpoint |
 | :x: | `core.oam.dev/v1alpha1.SingletonWorker` |  |
 | :x: | `core.oam.dev/v1alpha1.Task` | |
 | :x: | `core.oam.dev/v1alpha1.SingletonTask` | |
