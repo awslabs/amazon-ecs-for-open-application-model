@@ -17,38 +17,38 @@ Resources:
       Cpu: 4.00 vcpu
       Memory: '10240'
       ExecutionRoleArn: !GetAtt ExecutionRole.Arn
-      ContainerDefinitions: 
+      ContainerDefinitions:
         - Name: server
-          Image: nginx:latest  
+          Image: nginx:latest
           ResourceRequirements:
             - Type: GPU
-              Value: '1' 
-          MountPoints: 
+              Value: '1'
+          MountPoints:
             - ContainerPath: /etc/config
-              ReadOnly:  true 
-              SourceVolume: configuration   
-          EntryPoint: 
-            - "nginx"   
-          Command: 
-            - "--debug"        
+              ReadOnly:  true
+              SourceVolume: configuration
+          EntryPoint:
+            - "nginx"
+          Command:
+            - "--debug"
           HealthCheck:
-            Command: 
-              - "wget" 
-              - "-qO" 
-              - "-" 
-              - "http://localhost" 
-            Interval:  12 
-            Retries:  4 
-            StartPeriod:  5 
-            Timeout:  3   
+            Command:
+              - "wget"
+              - "-qO"
+              - "-"
+              - "http://localhost"
+            Interval:  12
+            Retries:  4
+            StartPeriod:  5
+            Timeout:  3
           LogConfiguration:
             LogDriver: awslogs
             Options:
               awslogs-region: !Ref AWS::Region
               awslogs-group: !Ref LogGroup
-              awslogs-stream-prefix: oam-ecs  
-      Volumes:  
-        - Name: configuration 
+              awslogs-stream-prefix: oam-ecs
+      Volumes:
+        - Name: configuration
 
   ExecutionRole:
     Type: AWS::IAM::Role
@@ -59,7 +59,7 @@ Resources:
             Principal:
               Service: ecs-tasks.amazonaws.com
             Action: 'sts:AssumeRole'
-      
+
       ManagedPolicyArns:
         - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
 
@@ -74,7 +74,7 @@ Resources:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
-        Fn::ImportValue: oam-ecs-ClusterId
+        Fn::ImportValue: oam-ecs-ECSCluster
       TaskDefinition: !Ref TaskDefinition
       DeploymentConfiguration:
         MinimumHealthyPercent: 100
@@ -89,16 +89,16 @@ Resources:
               - ','
               - Fn::ImportValue: oam-ecs-PrivateSubnets
           SecurityGroups:
-            - !Ref ContainerSecurityGroup 
+            - !Ref ContainerSecurityGroup
 
 
 
 Outputs:
   CloudFormationStackConsole:
     Description: The AWS console deep-link for the CloudFormation stack
-    Value: !Sub https://console.aws.amazon.com/cloudformation/home?region=${AWS::Region}#/stacks/stackinfo?stackId=${AWS::StackId}
+    Value: !Sub https://console.aws.amazon.com/cloudformation/home?region=${AWS::Region}#/stacks/stackinfo?stackId=${AWS::StackName}
 
   ECSServiceConsole:
     Description: The AWS console deep-link for the ECS service
-    Value: !Sub https://console.aws.amazon.com/ecs/home?region=${AWS::Region}#/clusters/oam-ecs/services/${Service.Name}/details
+    Value: !Sub https://console.aws.amazon.com/ecs/home?region=${AWS::Region}#/clusters/oam-ecs/services/${Service.Name}
 

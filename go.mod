@@ -15,6 +15,7 @@ require (
 	github.com/golang/mock v1.3.1
 	github.com/google/uuid v1.1.1
 	github.com/huandu/xstrings v1.3.0 // indirect
+	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334
 	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/mattn/go-isatty v0.0.10 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect

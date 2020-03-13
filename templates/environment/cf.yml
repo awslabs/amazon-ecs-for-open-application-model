@@ -198,6 +198,9 @@ Outputs:
   CloudFormationStackConsole:
     Value: !Sub https://console.aws.amazon.com/cloudformation/home?region=${AWS::Region}#/stacks/stackinfo?stackId=${AWS::StackName}
 
+  ECSClusterConsole:
+    Value: !Sub https://console.aws.amazon.com/ecs/home?region=${AWS::Region}#/clusters/${Cluster}
+
   VpcId:
     Value: !Ref VPC
     Export:
@@ -213,7 +216,7 @@ Outputs:
     Export:
       Name: !Sub ${EnvironmentName}-PrivateSubnets
 
-  ClusterId:
+  ECSCluster:
     Value: !Ref Cluster
     Export:
-      Name: !Sub ${EnvironmentName}-ClusterId
+      Name: !Sub ${EnvironmentName}-ECSCluster

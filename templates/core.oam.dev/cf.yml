@@ -89,7 +89,7 @@ Resources:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
-        Fn::ImportValue: {{.Environment.Name}}-ClusterId
+        Fn::ImportValue: {{.Environment.Name}}-ECSCluster
       TaskDefinition: !Ref TaskDefinition
       DeploymentConfiguration:
         MinimumHealthyPercent: 100
@@ -173,13 +173,13 @@ Resources:
 Outputs:
   CloudFormationStackConsole:
     Description: The AWS console deep-link for the CloudFormation stack
-    Value: !Sub https://console.aws.amazon.com/cloudformation/home?region=${AWS::Region}#/stacks/stackinfo?stackId=${AWS::StackId}
+    Value: !Sub https://console.aws.amazon.com/cloudformation/home?region=${AWS::Region}#/stacks/stackinfo?stackId=${AWS::StackName}
 
   ECSServiceConsole:
     Description: The AWS console deep-link for the ECS service
-    Value: !Sub https://console.aws.amazon.com/ecs/home?region=${AWS::Region}#/clusters/oam-ecs/services/${Service.Name}/details
+    Value: !Sub https://console.aws.amazon.com/ecs/home?region=${AWS::Region}#/clusters/oam-ecs/services/${Service.Name}
 {{if eq $.Component.Spec.WorkloadType "core.oam.dev/v1alpha1.Server"}} {{range $container := $.Component.Spec.Containers}} {{range $port := $container.Ports}}
-  Endpoint{{camelcase $container.Name}}Port{{$port.ContainerPort}}:
+  {{camelcase $container.Name}}Port{{$port.ContainerPort}}Endpoint:
     Description: The endpoint for container {{camelcase $container.Name}} on port {{$port.ContainerPort}}
     Value: !Sub '${PublicLoadBalancer.DNSName}:{{$port.ContainerPort}}'
 {{end}} {{end}} {{end}}

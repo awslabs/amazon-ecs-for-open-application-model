@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
+	"sort"
 	"strings"
 
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/aws/session"
@@ -15,7 +17,9 @@ import (
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/deploy/cloudformation/types"
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/term/log"
 	termprogress "github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/term/progress"
+	"github.com/iancoleman/strcase"
 	"github.com/oam-dev/oam-go-sdk/apis/core.oam.dev/v1alpha1"
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -185,9 +189,25 @@ func (opts *ApplyOpts) deployComponentInstance(application *v1alpha1.Application
 
 	opts.prog.Stop(log.Ssuccessf(deployComponentSucceeded, componentInstance.InstanceName, component.StackName))
 
-	for key, value := range component.StackOutputs {
-		log.Infof("\t%s:\n\t\t%s\n\n", key, value)
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Component Instance Attribute", "Value"})
+	table.SetBorder(false)
+
+	keys := make([]string, 0, len(component.StackOutputs))
+	for key := range component.StackOutputs {
+		keys = append(keys, key)
 	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		formattedKey := strings.Title(strings.ToLower(strcase.ToDelimited(key, ' ')))
+		formattedKey = strings.ReplaceAll(formattedKey, "Cloud Formation", "CloudFormation")
+		formattedKey = strings.ReplaceAll(formattedKey, "Ecs", "ECS")
+		table.Append([]string{formattedKey, component.StackOutputs[key]})
+	}
+
+	table.Render()
+	log.Infoln("") // get a newline below the table
 
 	return nil
 }

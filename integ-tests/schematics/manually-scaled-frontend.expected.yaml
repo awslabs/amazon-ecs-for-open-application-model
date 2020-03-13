@@ -17,18 +17,18 @@ Resources:
       Cpu: 4.00 vcpu
       Memory: '10240'
       ExecutionRoleArn: !GetAtt ExecutionRole.Arn
-      ContainerDefinitions: 
+      ContainerDefinitions:
         - Name: server
-          Image: nginx:latest        
-          PortMappings: 
+          Image: nginx:latest
+          PortMappings:
             - ContainerPort: 9001
-              Protocol:  tcp      
+              Protocol:  tcp
           LogConfiguration:
             LogDriver: awslogs
             Options:
               awslogs-region: !Ref AWS::Region
               awslogs-group: !Ref LogGroup
-              awslogs-stream-prefix: oam-ecs  
+              awslogs-stream-prefix: oam-ecs
 
   ExecutionRole:
     Type: AWS::IAM::Role
@@ -39,7 +39,7 @@ Resources:
             Principal:
               Service: ecs-tasks.amazonaws.com
             Action: 'sts:AssumeRole'
-      
+
       ManagedPolicyArns:
         - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
 
@@ -54,7 +54,7 @@ Resources:
     Type: AWS::ECS::Service
     Properties:
       Cluster:
-        Fn::ImportValue: oam-ecs-ClusterId
+        Fn::ImportValue: oam-ecs-ECSCluster
       TaskDefinition: !Ref TaskDefinition
       DeploymentConfiguration:
         MinimumHealthyPercent: 100
@@ -69,15 +69,15 @@ Resources:
               - ','
               - Fn::ImportValue: oam-ecs-PrivateSubnets
           SecurityGroups:
-            - !Ref ContainerSecurityGroup 
-      LoadBalancers:  
+            - !Ref ContainerSecurityGroup
+      LoadBalancers:
         - ContainerName: server
           ContainerPort: 9001
-          TargetGroupArn: !Ref TargetGroupServer9001  
+          TargetGroupArn: !Ref TargetGroupServer9001
       HealthCheckGracePeriodSeconds: 0
-    DependsOn:  
+    DependsOn:
       - LBListenerServer9001
-      
+
 
 
   SGLoadBalancerToContainers:
@@ -97,7 +97,7 @@ Resources:
         Fn::Split:
           - ','
           - Fn::ImportValue: oam-ecs-PublicSubnets
- 
+
   LBListenerServer9001:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -106,12 +106,12 @@ Resources:
           Type: 'forward'
       LoadBalancerArn: !Ref 'PublicLoadBalancer'
       Port: 9001
-      Protocol:  TCP 
+      Protocol:  TCP
 
   TargetGroupServer9001:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      Protocol:  TCP 
+      Protocol:  TCP
       TargetType: ip
       Port: 9001
       VpcId:
@@ -119,19 +119,19 @@ Resources:
       TargetGroupAttributes:
       - Key: deregistration_delay.timeout_seconds
         Value: '30'
-      
-  
+
+
 
 Outputs:
   CloudFormationStackConsole:
     Description: The AWS console deep-link for the CloudFormation stack
-    Value: !Sub https://console.aws.amazon.com/cloudformation/home?region=${AWS::Region}#/stacks/stackinfo?stackId=${AWS::StackId}
+    Value: !Sub https://console.aws.amazon.com/cloudformation/home?region=${AWS::Region}#/stacks/stackinfo?stackId=${AWS::StackName}
 
   ECSServiceConsole:
     Description: The AWS console deep-link for the ECS service
-    Value: !Sub https://console.aws.amazon.com/ecs/home?region=${AWS::Region}#/clusters/oam-ecs/services/${Service.Name}/details
-  
-  EndpointServerPort9001:
+    Value: !Sub https://console.aws.amazon.com/ecs/home?region=${AWS::Region}#/clusters/oam-ecs/services/${Service.Name}
+
+  ServerPort9001Endpoint:
     Description: The endpoint for container Server on port 9001
     Value: !Sub '${PublicLoadBalancer.DNSName}:9001'
-  
+

@@ -5,12 +5,14 @@ package cli
 import (
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/aws/session"
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/deploy/cloudformation"
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/deploy/cloudformation/types"
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/term/log"
 	termprogress "github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/term/progress"
+	"github.com/iancoleman/strcase"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
@@ -63,7 +65,10 @@ func (opts *DeployEnvironmentOpts) Execute() error {
 	sort.Strings(keys)
 
 	for _, key := range keys {
-		table.Append([]string{key, env.StackOutputs[key]})
+		formattedKey := strings.Title(strings.ToLower(strcase.ToDelimited(key, ' ')))
+		formattedKey = strings.ReplaceAll(formattedKey, "Cloud Formation", "CloudFormation")
+		formattedKey = strings.ReplaceAll(formattedKey, "Ecs", "ECS")
+		table.Append([]string{formattedKey, env.StackOutputs[key]})
 	}
 
 	table.Render()
