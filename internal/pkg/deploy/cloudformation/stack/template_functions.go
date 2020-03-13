@@ -20,10 +20,19 @@ var templateFunctions = map[string]interface{}{
 
 // resolveOAMParameterValue finds the value of a named parameter
 // for a given component instance configuration
-func resolveOAMParameterValue(paramName string, componentConfiguration *v1alpha1.ComponentConfiguration) (string, error) {
+func resolveOAMParameterValue(paramName string, componentConfiguration *v1alpha1.ComponentConfiguration, componentSpec *v1alpha1.ComponentSpec) (string, error) {
 	for _, paramValue := range componentConfiguration.ParameterValues {
 		if paramValue.Name == paramName {
 			return paramValue.Value, nil
+		}
+	}
+
+	for _, paramSpec := range componentSpec.Parameters {
+		if paramSpec.Name == paramName {
+			if paramSpec.Default != "" {
+				return paramSpec.Default, nil
+			}
+			break
 		}
 	}
 

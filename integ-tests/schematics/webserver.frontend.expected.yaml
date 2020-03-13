@@ -23,6 +23,8 @@ Resources:
           Environment:
             - Name: MESSAGE
               Value:  "[fromVariable(message)]"
+            - Name: TITLE
+              Value:  "Hey you"
           PortMappings:
             - ContainerPort: 80
               Protocol:  tcp
@@ -149,4 +151,3 @@ Outputs:
   WebPort80Endpoint:
     Description: The endpoint for container Web on port 80
     Value: !Sub '${PublicLoadBalancer.DNSName}:80'
-

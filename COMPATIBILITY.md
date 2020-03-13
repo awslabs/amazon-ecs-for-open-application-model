@@ -52,8 +52,8 @@ Legend:
 | :heavy_check_mark: | `name` |  |
 | :heavy_check_mark: | `description` |  |
 | :large_blue_diamond: | `type` | Ignored. No validation occurs |
-| :x: | `required` | |
-| :x: | `default` | |
+| :x: | `required` | Ignored. No validation occurs |
+| :heavy_check_mark: | `default` | |
 
 ### Component Schematic Container
 

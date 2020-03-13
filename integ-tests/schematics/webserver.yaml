@@ -32,12 +32,18 @@ spec:
     - name: message
       description: The message to display in the web app.
       type: string
-      value: "Hello from my app, too"
+      default: "Hello from my app, too"
+    - name: title
+      description: The title to display in the web app.
+      type: string
+      default: "Hey you"
   containers:
     - name: web
       env:
         - name: MESSAGE
           fromParam: message
+        - name: TITLE
+          fromParam: title
       image: example/frontend-svc:latest
       imagePullSecret: dockerhub-creds
       resources:

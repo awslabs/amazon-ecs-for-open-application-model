@@ -33,7 +33,7 @@ Resources:
             - "{{$arg}}" {{end}}  {{end}} {{if $container.Env}}
           Environment: {{range $env := $container.Env}}
             - Name: {{$env.Name}}
-              Value: {{if $env.FromParam}} "{{ResolveParameterValue $env.FromParam $.ComponentConfiguration}}" {{else}} "{{$env.Value}}" {{end}} {{end}} {{end}} {{if eq $.Component.Spec.WorkloadType "core.oam.dev/v1alpha1.Server"}} {{if $container.Ports}}
+              Value: {{if $env.FromParam}} "{{ResolveParameterValue $env.FromParam $.ComponentConfiguration $.Component.Spec}}" {{else}} "{{$env.Value}}" {{end}} {{end}} {{end}} {{if eq $.Component.Spec.WorkloadType "core.oam.dev/v1alpha1.Server"}} {{if $container.Ports}}
           PortMappings: {{range $port := $container.Ports}}
             - ContainerPort: {{$port.ContainerPort}}
               Protocol: {{if $port.Protocol}} {{$port.Protocol | toString | lower}} {{else}} tcp {{end}} {{end}} {{end}} {{end}} {{if $container.ImagePullSecret}}
