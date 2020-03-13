@@ -19,6 +19,7 @@ require (
 	github.com/mattn/go-isatty v0.0.10 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/oam-dev/oam-go-sdk v0.0.0-20200227073507-1edd39aaec14
+	github.com/olekukonko/tablewriter v0.0.4
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
 	github.com/spf13/cobra v0.0.6

@@ -3,11 +3,15 @@
 package cli
 
 import (
+	"os"
+	"sort"
+
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/aws/session"
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/deploy/cloudformation"
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/deploy/cloudformation/types"
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/term/log"
 	termprogress "github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/term/progress"
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -48,9 +52,21 @@ func (opts *DeployEnvironmentOpts) Execute() error {
 
 	opts.prog.Stop(log.Ssuccessf(deployEnvSucceeded, env.StackName))
 
-	for key, value := range env.StackOutputs {
-		log.Infof("\t%s:\n\t\t%s\n\n", key, value)
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Environment Attribute", "Value"})
+	table.SetBorder(false)
+
+	keys := make([]string, 0, len(env.StackOutputs))
+	for key := range env.StackOutputs {
+		keys = append(keys, key)
 	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		table.Append([]string{key, env.StackOutputs[key]})
+	}
+
+	table.Render()
 
 	return nil
 }

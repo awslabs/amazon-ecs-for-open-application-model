@@ -196,7 +196,7 @@ Resources:
 
 Outputs:
   CloudFormationStackConsole:
-    Value: !Sub https://console.aws.amazon.com/cloudformation/home?region=${AWS::Region}#/stacks/stackinfo?stackId=${AWS::StackId}
+    Value: !Sub https://console.aws.amazon.com/cloudformation/home?region=${AWS::Region}#/stacks/stackinfo?stackId=${AWS::StackName}
 
   VpcId:
     Value: !Ref VPC
