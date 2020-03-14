@@ -25,6 +25,12 @@ The oam-ecs environment deployment creates a VPC with public and private subnets
 oam-ecs env deploy
 ```
 
+The environment attributes like VPC ID and ECS cluster name can be described.
+
+```
+oam-ecs env show
+```
+
 The CloudFormation template deployed by this command can be [seen here](templates/environment/cf.yml).
 
 ## Deploy OAM workloads with oam-ecs
@@ -39,6 +45,26 @@ Then the CloudFormation resources, including load balancers and ECS services run
 
 ```
 oam-ecs app deploy -f examples/example-app.yaml -f examples/worker-component.yaml -f examples/server-component.yaml
+```
+
+The application component instances' attributes like ECS service name and endpoint DNS name can be described.
+
+```
+oam-ecs app show -f examples/example-app.yaml
+```
+
+## Tear down
+
+To delete all infrastructure provisioned by oam-ecs, first delete the deployed applications:
+
+```
+oam-ecs app delete -f examples/example-app.yaml
+```
+
+Then delete the environment infrastructure:
+
+```
+oam-ecs env delete
 ```
 
 ## Credentials and Region
