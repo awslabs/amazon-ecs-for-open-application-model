@@ -98,7 +98,7 @@ func (opts *ShowAppOpts) Execute() error {
 	return err
 }
 
-// BuildShowAppCmd build the command for showing an application.
+// BuildShowAppCmd builds the command for showing an application.
 func BuildShowAppCmd() *cobra.Command {
 	opts := NewShowAppOpts()
 	cmd := &cobra.Command{

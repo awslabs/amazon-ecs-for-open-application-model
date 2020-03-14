@@ -143,7 +143,7 @@ func (opts *DeployAppOpts) Execute() error {
 	return err
 }
 
-// BuildDeployAppCmd build the command for deploying an application.
+// BuildDeployAppCmd builds the command for deploying an application.
 func BuildDeployAppCmd() *cobra.Command {
 	opts := NewDeployAppOpts()
 	cmd := &cobra.Command{

@@ -53,7 +53,7 @@ func (opts *DeployEnvironmentOpts) Execute() error {
 	return nil
 }
 
-// BuildDeployEnvironmentCmd build the command for creating a new pipeline.
+// BuildDeployEnvironmentCmd builds the command for creating a new pipeline.
 func BuildDeployEnvironmentCmd() *cobra.Command {
 	opts := NewDeployEnvironmentOpts()
 	cmd := &cobra.Command{

@@ -73,7 +73,15 @@ func (cf CloudFormation) DeleteEnvironment(env *types.EnvironmentInput) (*types.
 	envConfig := stack.NewEnvStackConfig(env, cf.box)
 	stack, err := cf.describe(envConfig)
 	if err != nil {
-		return nil, err
+		var notFoundErr *ErrStackNotFound
+		if errors.As(err, &notFoundErr) {
+			// Stack was not found, don't return an error, since it's deleted already
+			return &types.Environment{
+				StackName: envConfig.StackName(),
+			}, nil
+		} else {
+			return nil, err
+		}
 	}
 	err = cf.delete(*stack.StackId)
 	if err != nil {

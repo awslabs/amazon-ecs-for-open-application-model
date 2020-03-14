@@ -51,7 +51,7 @@ func (opts *DeleteEnvironmentOpts) Execute() error {
 	return nil
 }
 
-// BuildDeleteEnvironmentCmd build the command for creating a new pipeline.
+// BuildDeleteEnvironmentCmd builds the command for creating a new pipeline.
 func BuildDeleteEnvironmentCmd() *cobra.Command {
 	opts := NewDeleteEnvironmentOpts()
 	cmd := &cobra.Command{

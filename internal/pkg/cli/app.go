@@ -17,6 +17,7 @@ func BuildAppCmd() *cobra.Command {
 
 	cmd.AddCommand(BuildDeployAppCmd())
 	cmd.AddCommand(BuildShowAppCmd())
+	cmd.AddCommand(BuildDeleteAppCmd())
 
 	return cmd
 }
