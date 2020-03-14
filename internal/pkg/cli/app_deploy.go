@@ -149,7 +149,7 @@ func BuildDeployAppCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deploy",
 		Short: "Deploy the application",
-		Long:  `Provisions (or updates) the Amazon ECS infrastructure for the application defined using the Open Application Model spec. All component schematics and the application configuration file for the application must be provided every time the DeployApp command runs (this CLI does not save any state).`,
+		Long:  `Provisions (or updates) the Amazon ECS infrastructure for the application defined using the Open Application Model spec. All component schematics and the application configuration file for the application must be provided every time the 'app deploy' command runs (this CLI does not save any state).`,
 		Example: `
   Deploy the application's OAM component schematic files and application configuration file:
 	$ oam-ecs app deploy -f component1.yml,component2.yml,config.yml`,

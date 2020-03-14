@@ -101,3 +101,13 @@ func (cf CloudFormation) DryRunComponent(component *types.ComponentInput) (strin
 
 	return templateFilePath, nil
 }
+
+// DescribeComponent describes the existing CloudFormation stack for an environment
+func (cf CloudFormation) DescribeComponent(component *types.ComponentInput) (*types.Component, error) {
+	stackConfig := stack.NewComponentStackConfig(component, cf.box)
+	stack, err := cf.describe(stackConfig)
+	if err != nil {
+		return nil, err
+	}
+	return stackConfig.ToComponent(stack)
+}
