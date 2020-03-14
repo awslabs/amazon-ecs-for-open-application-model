@@ -17,7 +17,7 @@ import (
 // If the stack already exists, update the stack.
 // If the change set to create/update the stack cannot be executed, returns a ErrNotExecutableChangeSet.
 // Otherwise, returns a wrapped error.
-func (cf CloudFormation) DeployEnvironment(env *types.CreateEnvironmentInput) (*types.Environment, error) {
+func (cf CloudFormation) DeployEnvironment(env *types.EnvironmentInput) (*types.Environment, error) {
 	envConfig := stack.NewEnvStackConfig(env, cf.box)
 
 	// Try to create the stack
@@ -52,6 +52,16 @@ func (cf CloudFormation) DeployEnvironment(env *types.CreateEnvironmentInput) (*
 
 	// Wait for the stack to finish creation
 	stack, err := cf.waitForStackCreation(envConfig)
+	if err != nil {
+		return nil, err
+	}
+	return envConfig.ToEnv(stack)
+}
+
+// DescribeEnvironment describes the existing CloudFormation stack for an environment
+func (cf CloudFormation) DescribeEnvironment(env *types.EnvironmentInput) (*types.Environment, error) {
+	envConfig := stack.NewEnvStackConfig(env, cf.box)
+	stack, err := cf.describe(envConfig)
 	if err != nil {
 		return nil, err
 	}

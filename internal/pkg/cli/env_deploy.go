@@ -3,28 +3,22 @@
 package cli
 
 import (
-	"os"
-	"sort"
-	"strings"
-
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/aws/session"
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/deploy/cloudformation"
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/deploy/cloudformation/types"
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/term/log"
 	termprogress "github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/term/progress"
-	"github.com/iancoleman/strcase"
-	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
 const (
 	deployEnvStart     = "Deploying the infrastructure for the environment."
 	deployEnvFailed    = "Failed to deploy the infrastructure for the environment."
-	deployEnvSucceeded = "Deployed the environment infrastructure in CloudFormation stack %s.\n"
+	deployEnvSucceeded = "Deployed the environment infrastructure in CloudFormation stack %s."
 )
 
 type cfEnvironmentDeployer interface {
-	DeployEnvironment(env *types.CreateEnvironmentInput) (*types.Environment, error)
+	DeployEnvironment(env *types.EnvironmentInput) (*types.Environment, error)
 }
 
 // DeployEnvironmentOpts holds the configuration needed to deploy the oam-ecs environment.
@@ -42,7 +36,7 @@ func NewDeployEnvironmentOpts() *DeployEnvironmentOpts {
 
 // Execute deploys the environment CloudFormation stack
 func (opts *DeployEnvironmentOpts) Execute() error {
-	deployEnvInput := &types.CreateEnvironmentInput{}
+	deployEnvInput := &types.EnvironmentInput{}
 
 	opts.prog.Start(deployEnvStart)
 
@@ -54,24 +48,7 @@ func (opts *DeployEnvironmentOpts) Execute() error {
 
 	opts.prog.Stop(log.Ssuccessf(deployEnvSucceeded, env.StackName))
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Environment Attribute", "Value"})
-	table.SetBorder(false)
-
-	keys := make([]string, 0, len(env.StackOutputs))
-	for key := range env.StackOutputs {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-
-	for _, key := range keys {
-		formattedKey := strings.Title(strings.ToLower(strcase.ToDelimited(key, ' ')))
-		formattedKey = strings.ReplaceAll(formattedKey, "Cloud Formation", "CloudFormation")
-		formattedKey = strings.ReplaceAll(formattedKey, "Ecs", "ECS")
-		table.Append([]string{formattedKey, env.StackOutputs[key]})
-	}
-
-	table.Render()
+	env.Display()
 
 	return nil
 }

@@ -14,7 +14,7 @@ import (
 // EnvStackConfig is for providing all the values to set up an
 // environment stack and to interpret the outputs from it.
 type EnvStackConfig struct {
-	*types.CreateEnvironmentInput
+	*types.EnvironmentInput
 	box packd.Box
 }
 
@@ -25,10 +25,10 @@ const (
 
 // NewEnvStackConfig sets up a struct which can provide values to CloudFormation for
 // spinning up an environment.
-func NewEnvStackConfig(input *types.CreateEnvironmentInput, box packd.Box) *EnvStackConfig {
+func NewEnvStackConfig(input *types.EnvironmentInput, box packd.Box) *EnvStackConfig {
 	return &EnvStackConfig{
-		CreateEnvironmentInput: input,
-		box:                    box,
+		EnvironmentInput: input,
+		box:              box,
 	}
 }
 

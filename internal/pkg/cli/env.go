@@ -16,6 +16,7 @@ func BuildEnvCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(BuildDeployEnvironmentCmd())
+	cmd.AddCommand(BuildShowEnvironmentCmd())
 
 	return cmd
 }
