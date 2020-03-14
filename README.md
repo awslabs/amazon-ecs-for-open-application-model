@@ -13,7 +13,8 @@ For a full comparison with the OAM specification, see the [Compatibility](COMPAT
 ```
 make
 make test
-./bin/local/oam-ecs --help
+export PATH="$PATH:./bin/local"
+oam-ecs --help
 ```
 
 ## Deploy an oam-ecs environment
@@ -21,7 +22,7 @@ make test
 The oam-ecs environment deployment creates a VPC with public and private subnets where OAM workloads can be deployed.
 
 ```
-./bin/local/oam-ecs deploy-environment
+oam-ecs env deploy
 ```
 
 The CloudFormation template deployed by this command can be [seen here](templates/environment/cf.yml).
@@ -31,13 +32,13 @@ The CloudFormation template deployed by this command can be [seen here](template
 The dry-run step outputs the CloudFormation template that represents the given OAM workloads.  The CloudFormation templates are written to the `./oam-ecs-dry-run-results` directory.
 
 ```
-./bin/local/oam-ecs apply --dry-run -f examples/example-app.yaml -f examples/worker-component.yaml -f examples/server-component.yaml
+oam-ecs apply --dry-run -f examples/example-app.yaml -f examples/worker-component.yaml -f examples/server-component.yaml
 ```
 
 Then the CloudFormation resources, including load balancers and ECS services running on Fargate, can be deployed:
 
 ```
-./bin/local/oam-ecs apply -f examples/example-app.yaml -f examples/worker-component.yaml -f examples/server-component.yaml
+oam-ecs apply -f examples/example-app.yaml -f examples/worker-component.yaml -f examples/server-component.yaml
 ```
 
 ## Credentials and Region

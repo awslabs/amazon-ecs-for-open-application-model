@@ -80,12 +80,12 @@ func (opts *DeployEnvironmentOpts) Execute() error {
 func BuildDeployEnvironmentCmd() *cobra.Command {
 	opts := NewDeployEnvironmentOpts()
 	cmd := &cobra.Command{
-		Use:   "deploy-environment",
+		Use:   "deploy",
 		Short: "Deploy the oam-ecs environment",
 		Long:  `Creates (or updates) the shared infrastructure, including a VPC and ECS cluster, for oam-ecs applications`,
 		Example: `
   Create the oam-ecs environment:
-	$ oam-ecs deploy-environment`,
+	$ oam-ecs env deploy`,
 		PreRunE: runCmdE(func(cmd *cobra.Command, args []string) error {
 			session, err := session.Default()
 			if err != nil {

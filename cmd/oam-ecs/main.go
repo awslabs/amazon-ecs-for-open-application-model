@@ -43,7 +43,7 @@ func buildRootCmd() *cobra.Command {
 
 	// Commands (in the order they will show up in the help menu)
 	cmd.AddCommand(cli.BuildApplyCmd())
-	cmd.AddCommand(cli.BuildDeployEnvironmentCmd())
+	cmd.AddCommand(cli.BuildEnvCmd())
 
 	return cmd
 }
