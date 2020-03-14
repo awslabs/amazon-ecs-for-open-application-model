@@ -6,25 +6,18 @@ package cli
 
 import (
 	"fmt"
-	"io"
-	"io/ioutil"
-	"strings"
 
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/aws/session"
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/deploy/cloudformation"
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/deploy/cloudformation/types"
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/term/log"
 	termprogress "github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/term/progress"
+	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/workload"
 	"github.com/oam-dev/oam-go-sdk/apis/core.oam.dev/v1alpha1"
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/client-go/kubernetes/scheme"
 )
 
 const (
-	workerComponentWorkloadType = "core.oam.dev/v1alpha1.Worker"
-	serverComponentWorkloadType = "core.oam.dev/v1alpha1.Server"
-
 	environmentName = "oam-ecs"
 
 	dryRunComponentStart     = "Computing infrastructure template for the component instance %s."
@@ -55,82 +48,6 @@ func NewDeployAppOpts() *DeployAppOpts {
 	return &DeployAppOpts{
 		prog: termprogress.NewSpinner(),
 	}
-}
-
-func (opts *DeployAppOpts) parseOamFiles(oamFiles []string) (*v1alpha1.ApplicationConfiguration, map[string]*v1alpha1.ComponentSchematic, error) {
-	var applicationConfiguration *v1alpha1.ApplicationConfiguration
-	componentSchematics := make(map[string]*v1alpha1.ComponentSchematic)
-
-	v1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
-	decode := scheme.Codecs.UniversalDeserializer().Decode
-
-	// Parse all of the app config and component schematics from the given files
-	for _, fileLocation := range oamFiles {
-		fileContents, err := ioutil.ReadFile(fileLocation)
-		if err != nil {
-			log.Errorf("Failed to read file %s\n", fileLocation)
-			return nil, nil, err
-		}
-
-		// Split the file into potentially multiple YAML documents delimited by '\n---'
-		reader := yaml.NewDocumentDecoder(ioutil.NopCloser(strings.NewReader(string(fileContents))))
-		for {
-			chunk := make([]byte, len(fileContents))
-			n, err := reader.Read(chunk)
-			if err != nil {
-				if err == io.EOF {
-					break
-				}
-				log.Errorf("Failed to read file %s\n", fileLocation)
-				return nil, nil, err
-			}
-			chunk = chunk[:n]
-
-			obj, kind, err := decode(chunk, nil, nil)
-			if err != nil {
-				log.Errorf("Failed to parse file %s\n", fileLocation)
-				return nil, nil, err
-			}
-
-			switch obj.(type) {
-			case *v1alpha1.ApplicationConfiguration:
-				if applicationConfiguration != nil {
-					log.Errorf("File %s contains an ApplicationConfiguration, but one has already been found\n", fileLocation)
-					return nil, nil, fmt.Errorf("Multiple application configuration files found, only one is allowed per application")
-				}
-				applicationConfiguration = obj.(*v1alpha1.ApplicationConfiguration)
-			case *v1alpha1.ComponentSchematic:
-				schematic := obj.(*v1alpha1.ComponentSchematic)
-
-				if schematic.Spec.WorkloadType != workerComponentWorkloadType && schematic.Spec.WorkloadType != serverComponentWorkloadType {
-					log.Errorf("Component schematic %s is an invalid workload type\n", schematic.Name)
-					return nil, nil, fmt.Errorf("Workload type is %s, only %s and %s are supported", schematic.Spec.WorkloadType, workerComponentWorkloadType, serverComponentWorkloadType)
-				}
-
-				componentSchematics[schematic.Name] = schematic
-			default:
-				log.Errorf("Found invalid object in file %s\n", fileLocation)
-				return nil, nil, fmt.Errorf("Object type %s is not supported", kind)
-			}
-			log.Successf("Read %s from file %s\n", kind, fileLocation)
-		}
-	}
-
-	if applicationConfiguration == nil {
-		log.Errorf("No application configuration found in given files %s\n", strings.Join(oamFiles, ", "))
-		return nil, nil, fmt.Errorf("Application configuration is required")
-	}
-
-	// Validate app config and component schematics
-	for _, component := range applicationConfiguration.Spec.Components {
-		_, ok := componentSchematics[component.ComponentName]
-		if !ok {
-			log.Errorf("Could not find component schematic for %s\n", component.ComponentName)
-			return nil, nil, fmt.Errorf("Application configuration refers to component %s, but no file provided the component schematic", component.ComponentName)
-		}
-	}
-
-	return applicationConfiguration, componentSchematics, nil
 }
 
 func (opts *DeployAppOpts) newComponentInput(application *v1alpha1.ApplicationConfiguration, componentInstance *v1alpha1.ComponentConfiguration, schematic *v1alpha1.ComponentSchematic) (*types.ComponentInput, error) {
@@ -192,17 +109,30 @@ func (opts *DeployAppOpts) deployComponentInstance(application *v1alpha1.Applica
 
 // Execute parses the OAM files, translates them into infrastructure definitions, and deploys the infrastructure
 func (opts *DeployAppOpts) Execute() error {
-	applicationConfiguration, componentSchematics, err := opts.parseOamFiles(opts.OamFiles)
+	oamWorkload, err := workload.NewOamWorkload(
+		&workload.OamWorkloadProps{
+			OamFiles: opts.OamFiles,
+		})
 	if err != nil {
 		return err
 	}
 
-	for _, componentInstance := range applicationConfiguration.Spec.Components {
-		schematic, _ := componentSchematics[componentInstance.ComponentName]
+	// Validate we have app config and component schematics that go together
+	for _, component := range oamWorkload.ApplicationConfiguration.Spec.Components {
+		_, ok := oamWorkload.ComponentSchematics[component.ComponentName]
+		if !ok {
+			log.Errorf("Could not find the component schematic for %s\n", component.ComponentName)
+			return fmt.Errorf("Application configuration refers to component %s, but no file provided the component schematic", component.ComponentName)
+		}
+	}
+
+	// Deploy or dry-run the application components
+	for _, componentInstance := range oamWorkload.ApplicationConfiguration.Spec.Components {
+		schematic, _ := oamWorkload.ComponentSchematics[componentInstance.ComponentName]
 		if opts.DryRun {
-			err = opts.dryRunComponentInstance(applicationConfiguration, &componentInstance, schematic)
+			err = opts.dryRunComponentInstance(oamWorkload.ApplicationConfiguration, &componentInstance, schematic)
 		} else {
-			err = opts.deployComponentInstance(applicationConfiguration, &componentInstance, schematic)
+			err = opts.deployComponentInstance(oamWorkload.ApplicationConfiguration, &componentInstance, schematic)
 		}
 
 		if err != nil {
