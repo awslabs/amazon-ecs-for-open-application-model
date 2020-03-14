@@ -67,3 +67,17 @@ func (cf CloudFormation) DescribeEnvironment(env *types.EnvironmentInput) (*type
 	}
 	return envConfig.ToEnv(stack)
 }
+
+// DeleteEnvironment deletes the CloudFormation stack for an environment
+func (cf CloudFormation) DeleteEnvironment(env *types.EnvironmentInput) (*types.Environment, error) {
+	envConfig := stack.NewEnvStackConfig(env, cf.box)
+	stack, err := cf.describe(envConfig)
+	if err != nil {
+		return nil, err
+	}
+	err = cf.delete(*stack.StackId)
+	if err != nil {
+		return nil, err
+	}
+	return envConfig.ToEnv(stack)
+}
