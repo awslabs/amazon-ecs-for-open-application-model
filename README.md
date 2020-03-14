@@ -32,13 +32,13 @@ The CloudFormation template deployed by this command can be [seen here](template
 The dry-run step outputs the CloudFormation template that represents the given OAM workloads.  The CloudFormation templates are written to the `./oam-ecs-dry-run-results` directory.
 
 ```
-oam-ecs apply --dry-run -f examples/example-app.yaml -f examples/worker-component.yaml -f examples/server-component.yaml
+oam-ecs app deploy --dry-run -f examples/example-app.yaml -f examples/worker-component.yaml -f examples/server-component.yaml
 ```
 
 Then the CloudFormation resources, including load balancers and ECS services running on Fargate, can be deployed:
 
 ```
-oam-ecs apply -f examples/example-app.yaml -f examples/worker-component.yaml -f examples/server-component.yaml
+oam-ecs app deploy -f examples/example-app.yaml -f examples/worker-component.yaml -f examples/server-component.yaml
 ```
 
 ## Credentials and Region

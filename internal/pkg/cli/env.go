@@ -11,7 +11,7 @@ import (
 func BuildEnvCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "env",
-		Short: "Environment commands.",
+		Short: "Environment commands",
 		Long:  `Commands for working with the oam-ecs environment.`,
 	}
 

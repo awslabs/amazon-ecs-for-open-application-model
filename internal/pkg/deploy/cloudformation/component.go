@@ -24,7 +24,7 @@ const (
 // If the stack already exists, update the stack.
 // If the change set to create/update the stack cannot be executed, returns a ErrNotExecutableChangeSet.
 // Otherwise, returns a wrapped error.
-func (cf CloudFormation) DeployComponent(component *types.DeployComponentInput) (*types.Component, error) {
+func (cf CloudFormation) DeployComponent(component *types.ComponentInput) (*types.Component, error) {
 	componentConfig := stack.NewComponentStackConfig(component, cf.box)
 
 	// Try to create the stack
@@ -65,7 +65,7 @@ func (cf CloudFormation) DeployComponent(component *types.DeployComponentInput) 
 	return componentConfig.ToComponent(stack)
 }
 
-func (cf CloudFormation) DryRunComponent(component *types.DeployComponentInput) (string, error) {
+func (cf CloudFormation) DryRunComponent(component *types.ComponentInput) (string, error) {
 	stackConfig := stack.NewComponentStackConfig(component, cf.box)
 	template, err := stackConfig.Template()
 	if err != nil {

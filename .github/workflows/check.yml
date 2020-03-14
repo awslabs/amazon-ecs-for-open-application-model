@@ -31,5 +31,5 @@ jobs:
       run: |
         pip install cfn-lint
         cfn-lint integ-tests/schematics/*.expected.yaml
-        ./bin/local/oam-ecs apply --dry-run -f examples/example-app.yaml -f examples/worker-component.yaml -f examples/server-component.yaml
+        ./bin/local/oam-ecs app deploy --dry-run -f examples/example-app.yaml -f examples/worker-component.yaml -f examples/server-component.yaml
         cfn-lint oam-ecs-dry-run-results/*

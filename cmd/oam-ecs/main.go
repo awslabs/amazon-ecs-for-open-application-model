@@ -27,8 +27,8 @@ func buildRootCmd() *cobra.Command {
 		Use:   "oam-ecs",
 		Short: "Provision core Open Application Model (OAM) v1alpha1 workload types as Amazon ECS services",
 		Example: `
-  Display the help menu for the apply command
-  $ oam-ecs apply --help`,
+  Display the help menu for the app deploy command
+  $ oam-ecs app deploy --help`,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			// If we don't set a Run() function the help menu doesn't show up.
 			// See https://github.com/spf13/cobra/issues/790
@@ -42,7 +42,7 @@ func buildRootCmd() *cobra.Command {
 	cmd.SetVersionTemplate("oam-ecs version: {{.Version}}\n")
 
 	// Commands (in the order they will show up in the help menu)
-	cmd.AddCommand(cli.BuildApplyCmd())
+	cmd.AddCommand(cli.BuildAppCmd())
 	cmd.AddCommand(cli.BuildEnvCmd())
 
 	return cmd

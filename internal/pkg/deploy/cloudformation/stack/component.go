@@ -21,16 +21,16 @@ const (
 // ComponentStackConfig is for providing all the values to set up an
 // component instance stack and to interpret the outputs from it.
 type ComponentStackConfig struct {
-	*types.DeployComponentInput
+	*types.ComponentInput
 	box packd.Box
 }
 
 // NewComponentStackConfig sets up a struct which can provide values to CloudFormation for
 // spinning up a component instance.
-func NewComponentStackConfig(input *types.DeployComponentInput, box packd.Box) *ComponentStackConfig {
+func NewComponentStackConfig(input *types.ComponentInput, box packd.Box) *ComponentStackConfig {
 	return &ComponentStackConfig{
-		DeployComponentInput: input,
-		box:                  box,
+		ComponentInput: input,
+		box:            box,
 	}
 }
 
@@ -50,7 +50,7 @@ func (e *ComponentStackConfig) Template() (string, error) {
 	}
 
 	var buf bytes.Buffer
-	if err := template.Execute(&buf, e.DeployComponentInput); err != nil {
+	if err := template.Execute(&buf, e.ComponentInput); err != nil {
 		return "", err
 	}
 

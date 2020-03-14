@@ -58,85 +58,85 @@ func (matcher *CloudFormationTemplateMatcher) NegatedFailureMessage(actual inter
 var _ = Describe("generate dry-run CloudFormation templates", func() {
 
 	var (
-		applyOpts *cli.ApplyOpts
+		deployAppOpts *cli.DeployAppOpts
 	)
 
 	Context("Schematic validation", func() {
 		BeforeEach(func() {
-			applyOpts = cli.NewApplyOpts()
-			applyOpts.DryRun = true
+			deployAppOpts = cli.NewDeployAppOpts()
+			deployAppOpts.DryRun = true
 		})
 
 		It("invalid API version should return an error", func() {
-			applyOpts.OamFiles = []string{
+			deployAppOpts.OamFiles = []string{
 				"schematics/wrong-api-version.yaml",
 			}
-			err := applyOpts.Execute()
+			err := deployAppOpts.Execute()
 			Expect(err).Should(MatchError(HavePrefix("no kind \"ComponentSchematic\" is registered for version \"core.oam.dev/hello\"")))
 		})
 
 		It("invalid kind should return an error", func() {
-			applyOpts.OamFiles = []string{
+			deployAppOpts.OamFiles = []string{
 				"schematics/wrong-kind.yaml",
 			}
-			err := applyOpts.Execute()
+			err := deployAppOpts.Execute()
 			Expect(err).Should(MatchError(HavePrefix("no kind \"HelloWorld\" is registered for version \"core.oam.dev/v1alpha1\"")))
 		})
 
 		It("invalid workload type should return an error", func() {
-			applyOpts.OamFiles = []string{
+			deployAppOpts.OamFiles = []string{
 				"schematics/wrong-workload-type.yaml",
 			}
-			err := applyOpts.Execute()
+			err := deployAppOpts.Execute()
 			Expect(err).Should(MatchError(HavePrefix("Workload type is core.oam.dev/v1alpha1.HelloWorld, only core.oam.dev/v1alpha1.Worker and core.oam.dev/v1alpha1.Server are supported")))
 		})
 
 		It("extended workload types are not supported", func() {
-			applyOpts.OamFiles = []string{
+			deployAppOpts.OamFiles = []string{
 				"schematics/extended-workload-type.yaml",
 			}
-			err := applyOpts.Execute()
+			err := deployAppOpts.Execute()
 			Expect(err).Should(MatchError(HavePrefix("Workload type is ecs.amazonaws.com/v1.ECSService, only core.oam.dev/v1alpha1.Worker and core.oam.dev/v1alpha1.Server are supported")))
 		})
 
 		It("application scopes are not supported", func() {
-			applyOpts.OamFiles = []string{
+			deployAppOpts.OamFiles = []string{
 				"schematics/application-scope.yaml",
 			}
-			err := applyOpts.Execute()
+			err := deployAppOpts.Execute()
 			Expect(err).Should(MatchError(HavePrefix("Object type core.oam.dev/v1alpha1, Kind=ApplicationScope is not supported")))
 		})
 
 		It("custom traits are not supported", func() {
-			applyOpts.OamFiles = []string{
+			deployAppOpts.OamFiles = []string{
 				"schematics/trait.yaml",
 			}
-			err := applyOpts.Execute()
+			err := deployAppOpts.Execute()
 			Expect(err).Should(MatchError(HavePrefix("Object type core.oam.dev/v1alpha1, Kind=Trait is not supported")))
 		})
 
 		It("multiple application configurations should return an error", func() {
-			applyOpts.OamFiles = []string{
+			deployAppOpts.OamFiles = []string{
 				"schematics/worker.yaml",
 				"schematics/webserver.yaml",
 			}
-			err := applyOpts.Execute()
+			err := deployAppOpts.Execute()
 			Expect(err).Should(MatchError(HavePrefix("Multiple application configuration files found, only one is allowed per application")))
 		})
 
 		It("missing application configuration should return an error", func() {
-			applyOpts.OamFiles = []string{
+			deployAppOpts.OamFiles = []string{
 				"schematics/nginx.yaml",
 			}
-			err := applyOpts.Execute()
+			err := deployAppOpts.Execute()
 			Expect(err).Should(MatchError(HavePrefix("Application configuration is required")))
 		})
 
 		It("missing component schematic should return an error", func() {
-			applyOpts.OamFiles = []string{
+			deployAppOpts.OamFiles = []string{
 				"schematics/manually-scaled-frontend.yaml",
 			}
-			err := applyOpts.Execute()
+			err := deployAppOpts.Execute()
 			Expect(err).Should(MatchError(HavePrefix("Application configuration refers to component nginx-replicated, but no file provided the component schematic")))
 		})
 	})
@@ -147,8 +147,8 @@ var _ = Describe("generate dry-run CloudFormation templates", func() {
 		})
 
 		BeforeEach(func() {
-			applyOpts = cli.NewApplyOpts()
-			applyOpts.DryRun = true
+			deployAppOpts = cli.NewDeployAppOpts()
+			deployAppOpts.DryRun = true
 
 			// Tests should not actually be calling AWS APIs, so give garbage credentials for the session
 			session := session.Must(session.NewSessionWithOptions(
@@ -159,14 +159,14 @@ var _ = Describe("generate dry-run CloudFormation templates", func() {
 					},
 				},
 			))
-			applyOpts.ComponentDeployer = cloudformation.New(session)
+			deployAppOpts.ComponentDeployer = cloudformation.New(session)
 		})
 
 		It("simple single worker component and configuration", func() {
-			applyOpts.OamFiles = []string{
+			deployAppOpts.OamFiles = []string{
 				"../integ-tests/schematics/worker.yaml",
 			}
-			err := applyOpts.Execute()
+			err := deployAppOpts.Execute()
 			Expect(err).Should(BeNil())
 
 			actualTemplate, _ := filepath.Abs("oam-ecs-dry-run-results/oam-ecs-simple-worker-web-front-end-template.yaml")
@@ -176,11 +176,11 @@ var _ = Describe("generate dry-run CloudFormation templates", func() {
 		})
 
 		It("simple single server component and configuration", func() {
-			applyOpts.OamFiles = []string{
+			deployAppOpts.OamFiles = []string{
 				"../integ-tests/schematics/nginx.yaml",
 				"../integ-tests/schematics/manually-scaled-frontend.yaml",
 			}
-			err := applyOpts.Execute()
+			err := deployAppOpts.Execute()
 			Expect(err).Should(BeNil())
 
 			actualTemplate, _ := filepath.Abs("oam-ecs-dry-run-results/oam-ecs-manual-scaler-app-web-front-end-template.yaml")
@@ -190,11 +190,11 @@ var _ = Describe("generate dry-run CloudFormation templates", func() {
 		})
 
 		It("order of the files does not matter", func() {
-			applyOpts.OamFiles = []string{
+			deployAppOpts.OamFiles = []string{
 				"../integ-tests/schematics/manually-scaled-frontend.yaml",
 				"../integ-tests/schematics/nginx.yaml",
 			}
-			err := applyOpts.Execute()
+			err := deployAppOpts.Execute()
 			Expect(err).Should(BeNil())
 
 			actualTemplate, _ := filepath.Abs("oam-ecs-dry-run-results/oam-ecs-manual-scaler-app-web-front-end-template.yaml")
@@ -204,10 +204,10 @@ var _ = Describe("generate dry-run CloudFormation templates", func() {
 		})
 
 		It("complex example with server and worker", func() {
-			applyOpts.OamFiles = []string{
+			deployAppOpts.OamFiles = []string{
 				"../integ-tests/schematics/complex.yaml",
 			}
-			err := applyOpts.Execute()
+			err := deployAppOpts.Execute()
 			Expect(err).Should(BeNil())
 
 			actualTemplate, _ := filepath.Abs("oam-ecs-dry-run-results/oam-ecs-complex-example-web-front-end-template.yaml")
@@ -222,10 +222,10 @@ var _ = Describe("generate dry-run CloudFormation templates", func() {
 		})
 
 		It("web server", func() {
-			applyOpts.OamFiles = []string{
+			deployAppOpts.OamFiles = []string{
 				"../integ-tests/schematics/webserver.yaml",
 			}
-			err := applyOpts.Execute()
+			err := deployAppOpts.Execute()
 			Expect(err).Should(BeNil())
 
 			actualTemplate, _ := filepath.Abs("oam-ecs-dry-run-results/oam-ecs-webserver-app-web-front-end-template.yaml")
@@ -240,10 +240,10 @@ var _ = Describe("generate dry-run CloudFormation templates", func() {
 		})
 
 		It("twitter bot", func() {
-			applyOpts.OamFiles = []string{
+			deployAppOpts.OamFiles = []string{
 				"../integ-tests/schematics/twitter-bot.yaml",
 			}
-			err := applyOpts.Execute()
+			err := deployAppOpts.Execute()
 			Expect(err).Should(BeNil())
 
 			actualTemplate, _ := filepath.Abs("oam-ecs-dry-run-results/oam-ecs-twitter-bot-web-front-end-template.yaml")

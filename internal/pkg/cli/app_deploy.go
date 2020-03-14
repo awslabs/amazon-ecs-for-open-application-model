@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
-	"sort"
 	"strings"
 
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/aws/session"
@@ -17,9 +15,7 @@ import (
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/deploy/cloudformation/types"
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/term/log"
 	termprogress "github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/term/progress"
-	"github.com/iancoleman/strcase"
 	"github.com/oam-dev/oam-go-sdk/apis/core.oam.dev/v1alpha1"
-	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -36,16 +32,16 @@ const (
 	dryRunComponentSucceeded = "Wrote infrastructure template to disk for component instance %s: %s"
 	deployComponentStart     = "Deploying infrastructure changes for the component instance %s."
 	deployComponentFailed    = "Failed to deploy infrastructure changes for the component instance %s."
-	deployComponentSucceeded = "Deployed component instance %s in CloudFormation stack %s.\n"
+	deployComponentSucceeded = "Deployed component instance %s in CloudFormation stack %s."
 )
 
 type cfComponentDeployer interface {
-	DeployComponent(component *types.DeployComponentInput) (*types.Component, error)
-	DryRunComponent(component *types.DeployComponentInput) (string, error)
+	DeployComponent(component *types.ComponentInput) (*types.Component, error)
+	DryRunComponent(component *types.ComponentInput) (string, error)
 }
 
-// ApplyOpts holds the configuration needed to provision an application.
-type ApplyOpts struct {
+// DeployAppOpts holds the configuration needed to provision an application.
+type DeployAppOpts struct {
 	// Fields with matching flags
 	OamFiles []string
 	DryRun   bool
@@ -54,14 +50,14 @@ type ApplyOpts struct {
 	ComponentDeployer cfComponentDeployer
 }
 
-// NewApplyOpts initiates the fields to provision an application.
-func NewApplyOpts() *ApplyOpts {
-	return &ApplyOpts{
+// NewDeployAppOpts initiates the fields to provision an application.
+func NewDeployAppOpts() *DeployAppOpts {
+	return &DeployAppOpts{
 		prog: termprogress.NewSpinner(),
 	}
 }
 
-func (opts *ApplyOpts) parseOamFiles(oamFiles []string) (*v1alpha1.ApplicationConfiguration, map[string]*v1alpha1.ComponentSchematic, error) {
+func (opts *DeployAppOpts) parseOamFiles(oamFiles []string) (*v1alpha1.ApplicationConfiguration, map[string]*v1alpha1.ComponentSchematic, error) {
 	var applicationConfiguration *v1alpha1.ApplicationConfiguration
 	componentSchematics := make(map[string]*v1alpha1.ComponentSchematic)
 
@@ -137,7 +133,7 @@ func (opts *ApplyOpts) parseOamFiles(oamFiles []string) (*v1alpha1.ApplicationCo
 	return applicationConfiguration, componentSchematics, nil
 }
 
-func (opts *ApplyOpts) newDeployComponentInput(application *v1alpha1.ApplicationConfiguration, componentInstance *v1alpha1.ComponentConfiguration, schematic *v1alpha1.ComponentSchematic) (*types.DeployComponentInput, error) {
+func (opts *DeployAppOpts) newComponentInput(application *v1alpha1.ApplicationConfiguration, componentInstance *v1alpha1.ComponentConfiguration, schematic *v1alpha1.ComponentSchematic) (*types.ComponentInput, error) {
 	// TODO validate that following are not set: osType, arch, volume disk, volume sharing policy,
 	// 				container extended resource, container config file, container readiness probe,
 	//				container liveness probe failure threshold/httpGet/tcpSocket
@@ -148,7 +144,7 @@ func (opts *ApplyOpts) newDeployComponentInput(application *v1alpha1.Application
 		Name: environmentName,
 	}
 
-	return &types.DeployComponentInput{
+	return &types.ComponentInput{
 		ApplicationConfiguration: application,
 		ComponentConfiguration:   componentInstance,
 		Component:                schematic,
@@ -157,8 +153,8 @@ func (opts *ApplyOpts) newDeployComponentInput(application *v1alpha1.Application
 	}, nil
 }
 
-func (opts *ApplyOpts) dryRunComponentInstance(application *v1alpha1.ApplicationConfiguration, componentInstance *v1alpha1.ComponentConfiguration, schematic *v1alpha1.ComponentSchematic) error {
-	deployComponentInput, err := opts.newDeployComponentInput(application, componentInstance, schematic)
+func (opts *DeployAppOpts) dryRunComponentInstance(application *v1alpha1.ApplicationConfiguration, componentInstance *v1alpha1.ComponentConfiguration, schematic *v1alpha1.ComponentSchematic) error {
+	deployComponentInput, err := opts.newComponentInput(application, componentInstance, schematic)
 	if err != nil {
 		return err
 	}
@@ -173,8 +169,8 @@ func (opts *ApplyOpts) dryRunComponentInstance(application *v1alpha1.Application
 	return nil
 }
 
-func (opts *ApplyOpts) deployComponentInstance(application *v1alpha1.ApplicationConfiguration, componentInstance *v1alpha1.ComponentConfiguration, schematic *v1alpha1.ComponentSchematic) error {
-	deployComponentInput, err := opts.newDeployComponentInput(application, componentInstance, schematic)
+func (opts *DeployAppOpts) deployComponentInstance(application *v1alpha1.ApplicationConfiguration, componentInstance *v1alpha1.ComponentConfiguration, schematic *v1alpha1.ComponentSchematic) error {
+	deployComponentInput, err := opts.newComponentInput(application, componentInstance, schematic)
 	if err != nil {
 		return err
 	}
@@ -189,31 +185,13 @@ func (opts *ApplyOpts) deployComponentInstance(application *v1alpha1.Application
 
 	opts.prog.Stop(log.Ssuccessf(deployComponentSucceeded, componentInstance.InstanceName, component.StackName))
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Component Instance Attribute", "Value"})
-	table.SetBorder(false)
-
-	keys := make([]string, 0, len(component.StackOutputs))
-	for key := range component.StackOutputs {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-
-	for _, key := range keys {
-		formattedKey := strings.Title(strings.ToLower(strcase.ToDelimited(key, ' ')))
-		formattedKey = strings.ReplaceAll(formattedKey, "Cloud Formation", "CloudFormation")
-		formattedKey = strings.ReplaceAll(formattedKey, "Ecs", "ECS")
-		table.Append([]string{formattedKey, component.StackOutputs[key]})
-	}
-
-	table.Render()
-	log.Infoln("") // get a newline below the table
+	component.Display()
 
 	return nil
 }
 
 // Execute parses the OAM files, translates them into infrastructure definitions, and deploys the infrastructure
-func (opts *ApplyOpts) Execute() error {
+func (opts *DeployAppOpts) Execute() error {
 	applicationConfiguration, componentSchematics, err := opts.parseOamFiles(opts.OamFiles)
 	if err != nil {
 		return err
@@ -235,16 +213,16 @@ func (opts *ApplyOpts) Execute() error {
 	return err
 }
 
-// BuildApplyCmd build the command for deploying an application.
-func BuildApplyCmd() *cobra.Command {
-	opts := NewApplyOpts()
+// BuildDeployAppCmd build the command for deploying an application.
+func BuildDeployAppCmd() *cobra.Command {
+	opts := NewDeployAppOpts()
 	cmd := &cobra.Command{
-		Use:   "apply",
+		Use:   "deploy",
 		Short: "Deploy the application",
-		Long:  `Provisions (or updates) the Amazon ECS infrastructure for the application defined using the Open Application Model spec. All component schematics and the application configuration file for the application must be provided every time the apply command runs (this CLI does not save any state).`,
+		Long:  `Provisions (or updates) the Amazon ECS infrastructure for the application defined using the Open Application Model spec. All component schematics and the application configuration file for the application must be provided every time the DeployApp command runs (this CLI does not save any state).`,
 		Example: `
-  Apply the application's OAM component schematic files and application configuration file:
-	$ oam-ecs apply -f component1.yml,component2.yml,config.yml`,
+  Deploy the application's OAM component schematic files and application configuration file:
+	$ oam-ecs app deploy -f component1.yml,component2.yml,config.yml`,
 		PreRunE: runCmdE(func(cmd *cobra.Command, args []string) error {
 			session, err := session.Default()
 			if err != nil {
