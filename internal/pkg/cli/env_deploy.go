@@ -3,6 +3,8 @@
 package cli
 
 import (
+	"fmt"
+
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/aws/session"
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/deploy/cloudformation"
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/deploy/cloudformation/types"
@@ -12,17 +14,21 @@ import (
 )
 
 const (
-	deployEnvStart     = "Deploying the infrastructure for the environment."
-	deployEnvFailed    = "Failed to deploy the infrastructure for the environment."
-	deployEnvSucceeded = "Deployed the environment infrastructure in CloudFormation stack %s."
+	dryRunEnvironmentSucceeded = "Wrote infrastructure template to disk for the environment: %s"
+	deployEnvStart             = "Deploying the infrastructure for the environment."
+	deployEnvFailed            = "Failed to deploy the infrastructure for the environment."
+	deployEnvSucceeded         = "Deployed the environment infrastructure in CloudFormation stack %s."
 )
 
 type cfEnvironmentDeployer interface {
 	DeployEnvironment(env *types.EnvironmentInput) (*types.Environment, error)
+	DryRunEnvironment(env *types.EnvironmentInput) (string, error)
 }
 
 // DeployEnvironmentOpts holds the configuration needed to deploy the oam-ecs environment.
 type DeployEnvironmentOpts struct {
+	DryRun bool
+
 	prog        progress
 	envDeployer cfEnvironmentDeployer
 }
@@ -34,8 +40,20 @@ func NewDeployEnvironmentOpts() *DeployEnvironmentOpts {
 	}
 }
 
-// Execute deploys the environment CloudFormation stack
-func (opts *DeployEnvironmentOpts) Execute() error {
+func (opts *DeployEnvironmentOpts) dryRunEnvironment() error {
+	deployEnvInput := &types.EnvironmentInput{}
+
+	file, err := opts.envDeployer.DryRunEnvironment(deployEnvInput)
+	if err != nil {
+		return err
+	}
+
+	log.Successln(fmt.Sprintf(dryRunEnvironmentSucceeded, file))
+
+	return nil
+}
+
+func (opts *DeployEnvironmentOpts) deployEnvironment() error {
 	deployEnvInput := &types.EnvironmentInput{}
 
 	opts.prog.Start(deployEnvStart)
@@ -51,6 +69,15 @@ func (opts *DeployEnvironmentOpts) Execute() error {
 	env.Display()
 
 	return nil
+}
+
+// Execute deploys the environment CloudFormation stack
+func (opts *DeployEnvironmentOpts) Execute() error {
+	if opts.DryRun {
+		return opts.dryRunEnvironment()
+	} else {
+		return opts.deployEnvironment()
+	}
 }
 
 // BuildDeployEnvironmentCmd builds the command for creating a new pipeline.
@@ -75,6 +102,8 @@ func BuildDeployEnvironmentCmd() *cobra.Command {
 			return opts.Execute()
 		}),
 	}
+
+	cmd.Flags().BoolVarP(&opts.DryRun, dryRunFlag, "", false, dryRunFlagDescription)
 
 	return cmd
 }

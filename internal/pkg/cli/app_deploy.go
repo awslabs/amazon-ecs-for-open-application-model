@@ -20,8 +20,6 @@ import (
 const (
 	environmentName = "oam-ecs"
 
-	dryRunComponentStart     = "Computing infrastructure template for the component instance %s."
-	dryRunComponentFailed    = "Failed to generate infrastructure template for the component instance %s."
 	dryRunComponentSucceeded = "Wrote infrastructure template to disk for component instance %s: %s"
 	deployComponentStart     = "Deploying infrastructure changes for the component instance %s."
 	deployComponentFailed    = "Failed to deploy infrastructure changes for the component instance %s."

@@ -6,6 +6,9 @@ package cloudformation
 
 import (
 	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/deploy/cloudformation/stack"
 	"github.com/awslabs/amazon-ecs-for-open-application-model/internal/pkg/deploy/cloudformation/types"
@@ -56,6 +59,43 @@ func (cf CloudFormation) DeployEnvironment(env *types.EnvironmentInput) (*types.
 		return nil, err
 	}
 	return envConfig.ToEnv(stack)
+}
+
+func (cf CloudFormation) DryRunEnvironment(env *types.EnvironmentInput) (string, error) {
+	stackConfig := stack.NewEnvStackConfig(env, cf.box)
+	template, err := stackConfig.Template()
+	if err != nil {
+		return "", fmt.Errorf("template creation: %w", err)
+	}
+
+	templateFileDir := filepath.Join(".", templateFileDirectoryName)
+	if _, err := os.Stat(templateFileDir); os.IsNotExist(err) {
+		err = os.Mkdir(templateFileDir, os.ModePerm)
+		if err != nil {
+			return "", fmt.Errorf("could not create directory %s: %w", templateFileDir, err)
+		}
+	}
+
+	templateFileAbsDir, err := filepath.Abs(templateFileDir)
+	if err != nil {
+		return "", fmt.Errorf("could not get absolute path for directory %s: %w", templateFileDir, err)
+	}
+
+	templateFilePath := filepath.Join(templateFileAbsDir, stackConfig.StackName()+"-template.yaml")
+
+	f, err := os.Create(templateFilePath)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	_, err = f.WriteString(template)
+	if err != nil {
+		return "", err
+	}
+	f.Sync()
+
+	return templateFilePath, nil
 }
 
 // DescribeEnvironment describes the existing CloudFormation stack for an environment
