@@ -63,6 +63,28 @@ The application component instances' attributes like ECS service name and endpoi
 oam-ecs app show -f examples/example-app.yaml
 ```
 
+## Upgrade and scale OAM workloads with oam-ecs
+
+To change operational settings like the scale of a component instance or to add new component instances to an application, update the application configuration file (e.g. `example-app.yaml`) and re-run the `oam-ecs deploy` command with the same inputs.  The existing CloudFormation stacks for the application will be updated with the new settings.
+
+```
+oam-ecs app deploy \
+  -f examples/example-app.yaml \
+  -f examples/worker-component.yaml \
+  -f examples/server-component.yaml
+```
+
+To upgrade a component to a new image tag, you can update the image tag in the component schematic file (e.g. `server-component.yaml`), and re-run the `oam-ecs deploy` command with the same inputs as above.  The existing CloudFormation stack for the updated component instance will be updated with the new image tag.
+
+The oam-ecs tool does not require following the [OAM spec guidance](https://github.com/oam-dev/spec/blob/4af9e65769759c408193445baf99eadd93f3426a/6.application_configuration.md#releases) that component schematics be treated as immutable.  To follow the spec guidance when upgrading to a new image tag, create a new component schematic (e.g. `server-component-v2.yaml` with name `nginx-server-v2`) and update the component instance in the application configuration (e.g. update the `componentName` to `nginx-server-v2` for the instance `server-nginx` in `example-app.yaml`).  Running `oam-ecs deploy` with the new component schematic will update that component instance's CloudFormation stack with the new image tag.  Do NOT update the `instanceName` in the application configuration, as that will result in creating a new CloudFormation stack and will not delete the previous CloudFormation stack.
+
+```
+oam-ecs app deploy \
+  -f examples/example-app.yaml \
+  -f examples/worker-component.yaml \
+  -f examples/server-component-v2.yaml
+```
+
 ## Tear down
 
 To delete all infrastructure provisioned by oam-ecs, first delete the deployed applications:
@@ -71,7 +93,9 @@ To delete all infrastructure provisioned by oam-ecs, first delete the deployed a
 oam-ecs app delete -f examples/example-app.yaml
 ```
 
-Then delete the environment infrastructure:
+You can delete the infrastructure for individual component instances by creating an application configuration file containing only that component instance, and running the above `oam-ecs delete` command.  Note that the `oam-ecs deploy` command does NOT comply with the [OAM spec requirement](https://github.com/oam-dev/spec/blob/4af9e65769759c408193445baf99eadd93f3426a/6.application_configuration.md#releases) to automatically delete the infrastructure for component instances that have been removed in an updated application configuration.
+
+To delete the environment infrastructure, once all applications are deleted:
 
 ```
 oam-ecs env delete
