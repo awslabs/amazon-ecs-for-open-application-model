@@ -162,6 +162,26 @@ var _ = Describe("generate dry-run CloudFormation templates", func() {
 			deployAppOpts.ComponentDeployer = cloudformation.New(session)
 		})
 
+		It("official examples", func() {
+			deployAppOpts.OamFiles = []string{
+				"../examples/example-app.yaml",
+				"../examples/server-component.yaml",
+				"../examples/worker-component.yaml",
+			}
+			err := deployAppOpts.Execute()
+			Expect(err).Should(BeNil())
+
+			actualTemplate, _ := filepath.Abs("oam-ecs-dry-run-results/oam-ecs-example-app-example-server-template.yaml")
+			expectedTemplate, _ := filepath.Abs("../integ-tests/schematics/example-server.expected.yaml")
+			Expect(actualTemplate).Should(BeAnExistingFile())
+			Expect(actualTemplate).Should(MatchCloudFormationTemplate(expectedTemplate))
+
+			actualTemplate, _ = filepath.Abs("oam-ecs-dry-run-results/oam-ecs-example-app-example-worker-template.yaml")
+			expectedTemplate, _ = filepath.Abs("../integ-tests/schematics/example-worker.expected.yaml")
+			Expect(actualTemplate).Should(BeAnExistingFile())
+			Expect(actualTemplate).Should(MatchCloudFormationTemplate(expectedTemplate))
+		})
+
 		It("simple single worker component and configuration", func() {
 			deployAppOpts.OamFiles = []string{
 				"../integ-tests/schematics/worker.yaml",

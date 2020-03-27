@@ -4,14 +4,14 @@ metadata:
   name: example-app
 spec:
   components:
-    - componentName: nginx-worker-v1
-      instanceName: worker-nginx
+    - componentName: worker-v1
+      instanceName: example-worker
       traits:
         - name: manual-scaler
           properties:
             replicaCount: 2
-    - componentName: nginx-server-v1
-      instanceName: server-nginx
+    - componentName: server-v1
+      instanceName: example-server
       parameterValues:
         - name: WorldValue
           value: Everyone

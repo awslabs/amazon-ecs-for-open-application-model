@@ -1,0 +1,146 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Amazon ECS infrastructure for example-app example-server
+
+Resources:
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: oam-ecs-example-app-example-server
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: oam-ecs-example-app-example-server
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: 0.25 vcpu
+      Memory: '512'
+      ExecutionRoleArn: !GetAtt ExecutionRole.Arn
+      ContainerDefinitions: 
+        - Name: server
+          Image: nginxdemos/hello     
+          Command: 
+            - "nginx-debug" 
+            - "-g" 
+            - "daemon off;"    
+          Environment: 
+            - Name: TEST
+              Value:  "Hello"  
+            - Name: PARAM
+              Value:  "Everyone"     
+          PortMappings: 
+            - ContainerPort: 80
+              Protocol:  tcp      
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref LogGroup
+              awslogs-stream-prefix: oam-ecs  
+
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+      
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+
+  ContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: oam-ecs-example-app-example-server-ContainerSecurityGroup
+      VpcId:
+        Fn::ImportValue: oam-ecs-VpcId
+
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster:
+        Fn::ImportValue: oam-ecs-ECSCluster
+      TaskDefinition: !Ref TaskDefinition
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          Subnets:
+            Fn::Split:
+              - ','
+              - Fn::ImportValue: oam-ecs-PrivateSubnets
+          SecurityGroups:
+            - !Ref ContainerSecurityGroup 
+      LoadBalancers:  
+        - ContainerName: server
+          ContainerPort: 80
+          TargetGroupArn: !Ref TargetGroupServer80  
+      HealthCheckGracePeriodSeconds: 0
+    DependsOn:  
+      - LBListenerServer80
+      
+
+
+  SGLoadBalancerToContainers:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Ingress from anywhere on the internet through the public NLB
+      GroupId: !Ref ContainerSecurityGroup
+      IpProtocol: '-1'
+      CidrIp: 0.0.0.0/0
+
+  PublicLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: network
+      Scheme: internet-facing
+      Subnets:
+        Fn::Split:
+          - ','
+          - Fn::ImportValue: oam-ecs-PublicSubnets
+ 
+  LBListenerServer80:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroupServer80
+          Type: 'forward'
+      LoadBalancerArn: !Ref 'PublicLoadBalancer'
+      Port: 80
+      Protocol:  TCP 
+
+  TargetGroupServer80:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Protocol:  TCP 
+      TargetType: ip
+      Port: 80
+      VpcId:
+        Fn::ImportValue: oam-ecs-VpcId
+      TargetGroupAttributes:
+      - Key: deregistration_delay.timeout_seconds
+        Value: '30'
+      
+  
+
+Outputs:
+  CloudFormationStackConsole:
+    Description: The AWS console deep-link for the CloudFormation stack
+    Value: !Sub https://console.aws.amazon.com/cloudformation/home?region=${AWS::Region}#/stacks/stackinfo?stackId=${AWS::StackName}
+
+  ECSServiceConsole:
+    Description: The AWS console deep-link for the ECS service
+    Value: !Sub https://console.aws.amazon.com/ecs/home?region=${AWS::Region}#/clusters/oam-ecs/services/${Service.Name}
+  
+  ServerPort80Endpoint:
+    Description: The endpoint for container Server on port 80
+    Value: !Sub '${PublicLoadBalancer.DNSName}:80'
+  
