@@ -7,7 +7,7 @@ require (
 	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
-	github.com/aws/aws-sdk-go v1.29.24
+	github.com/aws/aws-sdk-go v1.30.1
 	github.com/briandowns/spinner v1.9.0
 	github.com/fatih/color v1.9.0
 	github.com/gobuffalo/packd v1.0.0
