@@ -35,7 +35,7 @@ require (
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a // indirect
 	golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527 // indirect
 	k8s.io/api v0.17.4 // indirect
-	k8s.io/apimachinery v0.18.0
+	k8s.io/apimachinery v0.18.2
 	k8s.io/client-go v11.0.0+incompatible
 	sigs.k8s.io/controller-runtime v0.5.1 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
