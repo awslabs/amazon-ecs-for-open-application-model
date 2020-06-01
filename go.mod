@@ -24,7 +24,7 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/oam-dev/oam-go-sdk v0.0.0-20200311031835-ce9ec52bd420
 	github.com/olekukonko/tablewriter v0.0.4
-	github.com/onsi/ginkgo v1.12.1
+	github.com/onsi/ginkgo v1.12.3
 	github.com/onsi/gomega v1.10.1
 	github.com/spf13/cobra v0.0.7
 	github.com/stretchr/testify v1.5.1
