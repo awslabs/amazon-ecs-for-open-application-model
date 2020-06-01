@@ -7,19 +7,16 @@ require (
 	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
-	github.com/aws/aws-sdk-go v1.30.18
+	github.com/aws/aws-sdk-go v1.31.7
 	github.com/briandowns/spinner v1.10.0
 	github.com/fatih/color v1.9.0
 	github.com/gobuffalo/packd v1.0.0
 	github.com/gobuffalo/packr/v2 v2.8.0
-	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/mock v1.4.3
-	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/huandu/xstrings v1.3.0 // indirect
 	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334
 	github.com/imdario/mergo v0.3.8 // indirect
-	github.com/jmespath/go-jmespath v0.3.0 // indirect
 	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mattn/go-runewidth v0.0.8 // indirect
@@ -38,5 +35,4 @@ require (
 	k8s.io/apimachinery v0.18.2
 	k8s.io/client-go v11.0.0+incompatible
 	sigs.k8s.io/controller-runtime v0.5.1 // indirect
-	sigs.k8s.io/yaml v1.2.0 // indirect
 )
