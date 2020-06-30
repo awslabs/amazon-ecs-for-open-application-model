@@ -1,0 +1,37 @@
+pull_request_rules:
+  - name: Automatically merge on CI success and review approval
+    conditions:
+      - base=master
+      - "#approved-reviews-by>=1"
+      - approved-reviews-by=@awslabs/developer-experience
+      - -approved-reviews-by~=author
+      - status-success=Run Tests
+      - label!=work-in-progress
+      - -title~=(WIP|wip)
+      - -merged
+      - -closed
+      - author!=dependabot[bot]
+    actions:
+      merge:
+        method: squash
+        strict: smart
+        strict_method: merge
+
+  - name: Automatically approve and merge Dependabot PRs
+    conditions:
+      - base=master
+      - author=dependabot[bot]
+      - label=dependencies
+      - status-success=Run Tests
+      - label!=work-in-progress
+      - -title~=(WIP|wip)
+      - -label~=(blocked|do-not-merge)
+      - -merged
+      - -closed
+    actions:
+      review:
+        type: APPROVE
+      merge:
+        method: squash
+        strict: smart
+        strict_method: merge
