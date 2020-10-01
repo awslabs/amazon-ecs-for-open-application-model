@@ -17,7 +17,6 @@ require (
 	github.com/huandu/xstrings v1.3.0 // indirect
 	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334
 	github.com/imdario/mergo v0.3.8 // indirect
-	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mattn/go-runewidth v0.0.8 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
@@ -28,9 +27,8 @@ require (
 	github.com/onsi/gomega v1.10.1
 	github.com/spf13/cobra v0.0.7
 	github.com/stretchr/testify v1.6.1
-	golang.org/x/crypto v0.0.0-20200311171314-f7b00557c8c4 // indirect
 	k8s.io/api v0.17.4 // indirect
-	k8s.io/apimachinery v0.18.6
+	k8s.io/apimachinery v0.19.2
 	k8s.io/client-go v11.0.0+incompatible
 	sigs.k8s.io/controller-runtime v0.5.1 // indirect
 )
