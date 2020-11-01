@@ -24,10 +24,9 @@ require (
 	github.com/oam-dev/oam-go-sdk v0.0.0-20200311031835-ce9ec52bd420
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/onsi/ginkgo v1.14.2
-	github.com/onsi/gomega v1.10.1
+	github.com/onsi/gomega v1.10.3
 	github.com/spf13/cobra v0.0.7
 	github.com/stretchr/testify v1.6.1
-	golang.org/x/crypto v0.0.0-20200311171314-f7b00557c8c4 // indirect
 	k8s.io/api v0.17.4 // indirect
 	k8s.io/apimachinery v0.18.6
 	k8s.io/client-go v11.0.0+incompatible
