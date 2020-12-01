@@ -11,7 +11,7 @@ require (
 	github.com/briandowns/spinner v1.12.0
 	github.com/fatih/color v1.10.0
 	github.com/gobuffalo/packd v1.0.0
-	github.com/gobuffalo/packr/v2 v2.8.0
+	github.com/gobuffalo/packr/v2 v2.8.1
 	github.com/golang/mock v1.4.4
 	github.com/google/uuid v1.1.2
 	github.com/huandu/xstrings v1.3.0 // indirect
