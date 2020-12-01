@@ -8,10 +8,10 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/aws/aws-sdk-go v1.35.19
-	github.com/briandowns/spinner v1.11.1
+	github.com/briandowns/spinner v1.12.0
 	github.com/fatih/color v1.10.0
 	github.com/gobuffalo/packd v1.0.0
-	github.com/gobuffalo/packr/v2 v2.8.0
+	github.com/gobuffalo/packr/v2 v2.8.1
 	github.com/golang/mock v1.4.4
 	github.com/google/uuid v1.1.2
 	github.com/huandu/xstrings v1.3.0 // indirect
