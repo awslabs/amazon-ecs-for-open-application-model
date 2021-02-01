@@ -15,7 +15,7 @@ require (
 	github.com/gobuffalo/packr/v2 v2.8.1
 	github.com/golang/mock v1.4.4
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/google/uuid v1.1.2
+	github.com/google/uuid v1.2.0
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/iancoleman/strcase v0.1.2
 	github.com/imdario/mergo v0.3.11 // indirect
@@ -30,7 +30,7 @@ require (
 	github.com/onsi/gomega v1.10.3
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/spf13/cobra v1.1.1
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392 // indirect
 	golang.org/x/net v0.0.0-20201201195509-5d6afe98e0b7 // indirect
 	golang.org/x/sys v0.0.0-20201201145000-ef89a241ccb3 // indirect
