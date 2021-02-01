@@ -35,11 +35,8 @@ require (
 	golang.org/x/net v0.0.0-20201201195509-5d6afe98e0b7 // indirect
 	golang.org/x/sys v0.0.0-20201201145000-ef89a241ccb3 // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
-	golang.org/x/text v0.3.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/apimachinery v0.19.4
+	k8s.io/apimachinery v0.20.2
 	k8s.io/client-go v0.19.4
-	k8s.io/klog/v2 v2.4.0 // indirect
 	sigs.k8s.io/controller-runtime v0.6.4 // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.0.2 // indirect
 )
