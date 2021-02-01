@@ -3,11 +3,11 @@ module github.com/awslabs/amazon-ecs-for-open-application-model
 go 1.13
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.2.4
+	github.com/AlecAivazis/survey/v2 v2.2.7
 	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
-	github.com/aws/aws-sdk-go v1.35.37
+	github.com/aws/aws-sdk-go v1.37.1
 	github.com/briandowns/spinner v1.12.0
 	github.com/fatih/color v1.10.0
 	github.com/go-logr/logr v0.3.0 // indirect
@@ -34,11 +34,8 @@ require (
 	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392 // indirect
 	golang.org/x/sys v0.0.0-20201201145000-ef89a241ccb3 // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
-	golang.org/x/text v0.3.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/apimachinery v0.19.4
+	k8s.io/apimachinery v0.20.2
 	k8s.io/client-go v0.19.4
-	k8s.io/klog/v2 v2.4.0 // indirect
 	sigs.k8s.io/controller-runtime v0.6.4 // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.0.2 // indirect
 )
