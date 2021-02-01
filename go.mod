@@ -17,7 +17,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.2.0
 	github.com/huandu/xstrings v1.3.2 // indirect
-	github.com/iancoleman/strcase v0.1.2
+	github.com/iancoleman/strcase v0.1.3
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/karrick/godirwalk v1.16.1 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
