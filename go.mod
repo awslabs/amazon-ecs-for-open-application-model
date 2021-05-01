@@ -10,7 +10,6 @@ require (
 	github.com/aws/aws-sdk-go v1.38.10
 	github.com/briandowns/spinner v1.12.0
 	github.com/fatih/color v1.10.0
-	github.com/go-logr/logr v0.3.0 // indirect
 	github.com/gobuffalo/packd v1.0.0
 	github.com/gobuffalo/packr/v2 v2.8.1
 	github.com/golang/mock v1.5.0
@@ -31,8 +30,7 @@ require (
 	github.com/spf13/cobra v1.1.3
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392 // indirect
-	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
-	k8s.io/apimachinery v0.20.5
+	k8s.io/apimachinery v0.21.0
 	k8s.io/client-go v0.20.5
 	sigs.k8s.io/controller-runtime v0.6.4 // indirect
 )
