@@ -3,7 +3,7 @@ module github.com/awslabs/amazon-ecs-for-open-application-model
 go 1.13
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.2.9
+	github.com/AlecAivazis/survey/v2 v2.2.12
 	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
