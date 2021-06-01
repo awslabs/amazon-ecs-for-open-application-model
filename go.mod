@@ -9,7 +9,7 @@ require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/aws/aws-sdk-go v1.38.51
 	github.com/briandowns/spinner v1.12.0
-	github.com/fatih/color v1.10.0
+	github.com/fatih/color v1.12.0
 	github.com/gobuffalo/packd v1.0.0
 	github.com/gobuffalo/packr/v2 v2.8.1
 	github.com/golang/mock v1.5.0
@@ -24,12 +24,12 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/oam-dev/oam-go-sdk v0.0.0-20200908114024-f2801ed3a711
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/onsi/ginkgo v1.16.1
-	github.com/onsi/gomega v1.11.0
+	github.com/onsi/ginkgo v1.16.2
+	github.com/onsi/gomega v1.13.0
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/spf13/cobra v1.1.3
 	github.com/stretchr/testify v1.7.0
-	k8s.io/apimachinery v0.21.0
+	k8s.io/apimachinery v0.21.1
 	k8s.io/client-go v0.21.0
 	sigs.k8s.io/controller-runtime v0.6.4 // indirect
 )
