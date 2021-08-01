@@ -14,7 +14,7 @@ require (
 	github.com/gobuffalo/packr/v2 v2.8.1
 	github.com/golang/mock v1.6.0
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/google/uuid v1.2.0
+	github.com/google/uuid v1.3.0
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/iancoleman/strcase v0.1.3
 	github.com/imdario/mergo v0.3.11 // indirect
@@ -25,11 +25,11 @@ require (
 	github.com/oam-dev/oam-go-sdk v0.0.0-20200908114024-f2801ed3a711
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/onsi/ginkgo v1.16.4
-	github.com/onsi/gomega v1.13.0
+	github.com/onsi/gomega v1.14.0
 	github.com/sirupsen/logrus v1.7.0 // indirect
-	github.com/spf13/cobra v1.1.3
+	github.com/spf13/cobra v1.2.1
 	github.com/stretchr/testify v1.7.0
-	k8s.io/apimachinery v0.21.2
+	k8s.io/apimachinery v0.21.3
 	k8s.io/client-go v0.21.2
 	sigs.k8s.io/controller-runtime v0.6.4 // indirect
 )
