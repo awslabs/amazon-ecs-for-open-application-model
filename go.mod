@@ -9,7 +9,7 @@ require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/aws/aws-sdk-go v1.40.53
 	github.com/briandowns/spinner v1.16.0
-	github.com/fatih/color v1.12.0
+	github.com/fatih/color v1.13.0
 	github.com/gobuffalo/packd v1.0.0
 	github.com/gobuffalo/packr/v2 v2.8.1
 	github.com/golang/mock v1.6.0
