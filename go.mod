@@ -29,7 +29,7 @@ require (
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/spf13/cobra v1.2.1
 	github.com/stretchr/testify v1.7.0
-	k8s.io/apimachinery v0.22.2
+	k8s.io/apimachinery v0.22.3
 	k8s.io/client-go v0.21.3
 	sigs.k8s.io/controller-runtime v0.6.4 // indirect
 )
