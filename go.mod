@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go v1.41.14
 	github.com/briandowns/spinner v1.16.0
 	github.com/fatih/color v1.13.0
-	github.com/gobuffalo/packd v1.0.0
+	github.com/gobuffalo/packd v1.0.1
 	github.com/gobuffalo/packr/v2 v2.8.1
 	github.com/golang/mock v1.6.0
 	github.com/google/gofuzz v1.2.0 // indirect

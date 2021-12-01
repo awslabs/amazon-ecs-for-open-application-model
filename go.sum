@@ -218,8 +218,9 @@ github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0/go.mod h1:fyg78
 github.com/gobuffalo/flect v0.2.0/go.mod h1:W3K3X9ksuZfir8f/LrfVtWmCDQFfayuylOJ7sz/Fj80=
 github.com/gobuffalo/logger v1.0.3 h1:YaXOTHNPCvkqqA7w05A4v0k2tCdpr+sgFlgINbQ6gqc=
 github.com/gobuffalo/logger v1.0.3/go.mod h1:SoeejUwldiS7ZsyCBphOGURmWdwUFXs0J7TCjEhjKxM=
-github.com/gobuffalo/packd v1.0.0 h1:6ERZvJHfe24rfFmA9OaoKBdC7+c9sydrytMg8SdFGBM=
 github.com/gobuffalo/packd v1.0.0/go.mod h1:6VTc4htmJRFB7u1m/4LeMTWjFoYrUiBkU9Fdec9hrhI=
+github.com/gobuffalo/packd v1.0.1 h1:U2wXfRr4E9DH8IdsDLlRFwTZTK7hLfq9qT/QHXGVe/0=
+github.com/gobuffalo/packd v1.0.1/go.mod h1:PP2POP3p3RXGz7Jh6eYEf93S7vA2za6xM7QT85L4+VY=
 github.com/gobuffalo/packr/v2 v2.8.1 h1:tkQpju6i3EtMXJ9uoF5GT6kB+LMTimDWD8Xvbz6zDVA=
 github.com/gobuffalo/packr/v2 v2.8.1/go.mod h1:c/PLlOuTU+p3SybaJATW3H6lX/iK7xEz5OeMf+NnJpg=
 github.com/godbus/dbus/v5 v5.0.4/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
