@@ -14,8 +14,6 @@ pull_request_rules:
     actions:
       merge:
         method: squash
-        strict: smart
-        strict_method: merge
 
   - name: Automatically approve and merge Dependabot PRs
     conditions:
@@ -33,5 +31,3 @@ pull_request_rules:
         type: APPROVE
       merge:
         method: squash
-        strict: smart
-        strict_method: merge
