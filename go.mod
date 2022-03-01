@@ -8,7 +8,7 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/aws/aws-sdk-go v1.43.8
-	github.com/briandowns/spinner v1.18.0
+	github.com/briandowns/spinner v1.18.1
 	github.com/fatih/color v1.13.0
 	github.com/gobuffalo/packd v1.0.1
 	github.com/gobuffalo/packr/v2 v2.8.3
