@@ -10,14 +10,17 @@ require (
 	github.com/aws/aws-sdk-go v1.43.30
 	github.com/briandowns/spinner v1.18.1
 	github.com/fatih/color v1.13.0
+	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/gobuffalo/packd v1.0.1
 	github.com/gobuffalo/packr/v2 v2.8.3
 	github.com/golang/mock v1.6.0
+	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.3.0
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/iancoleman/strcase v0.2.0
 	github.com/imdario/mergo v0.3.11 // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
@@ -25,8 +28,9 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.19.0
-	github.com/spf13/cobra v1.3.0
+	github.com/spf13/cobra v1.4.0
 	github.com/stretchr/testify v1.7.0
+	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
 	k8s.io/apimachinery v0.23.5
 	k8s.io/client-go v0.23.4
 	sigs.k8s.io/controller-runtime v0.6.4 // indirect
